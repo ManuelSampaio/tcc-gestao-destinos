@@ -18,22 +18,22 @@ class AvaliacaoController {
     }
 
     public function processarAvaliacao($dados) {
-        error_log('Antes do session_start(): ' . session_status());
-session_start();
-error_log('Depois do session_start(): ' . session_status());
+        if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+        error_log('Sessão Atual: ' . print_r($_SESSION, true)); // Para depuração
 
-
-        // Verifica se usuário está logado
-        if (!isset($_SESSION['usuario_id'])) {
+        // Verifica se usuário está logado corretamente
+        if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['id_usuario'])) { 
             echo json_encode([
                 'sucesso' => false, 
                 'mensagem' => 'Você precisa estar logado para avaliar.'
             ]);
             exit;
-        }
+        }        
 
         // Valida dados de entrada
-        if (!isset($dados['id_destino']) || !isset($dados['nota'])) {
+        if (empty($dados['id_destino']) || empty($dados['nota'])) {
             echo json_encode([
                 'sucesso' => false, 
                 'mensagem' => 'Dados inválidos para avaliação.'
@@ -41,15 +41,15 @@ error_log('Depois do session_start(): ' . session_status());
             exit;
         }
 
-        $idUsuario = $_SESSION['usuario_id'];
-        $idDestino = $dados['id_destino'];
+        $idUsuario = $_SESSION['usuario']['id_usuario'];
+        $idDestino = (int) $dados['id_destino'];
 
         // Prepara dados da avaliação
         $dadosAvaliacao = [
             'id_usuario' => $idUsuario,
             'id_destino' => $idDestino,
-            'nota' => $dados['nota'],
-            'comentario' => $dados['comentario'] ?? null
+            'nota' => (int) $dados['nota'],
+            'comentario' => $dados['comentario'] ?? ''
         ];
 
         // Verifica se já avaliou e atualiza ao invés de adicionar
@@ -61,21 +61,19 @@ error_log('Depois do session_start(): ' . session_status());
             $mensagem = 'Avaliação enviada com sucesso!';
         }
 
-        if ($resultado) {
-            echo json_encode([
-                'sucesso' => true, 
-                'mensagem' => $mensagem
-            ]);
-        } else {
-            echo json_encode([
-                'sucesso' => false, 
-                'mensagem' => 'Erro ao processar avaliação.'
-            ]);
-        }
+        echo json_encode([
+            'sucesso' => $resultado, 
+            'mensagem' => $resultado ? $mensagem : 'Erro ao processar avaliação.'
+        ]);
         exit;
     }
 
     public function obterAvaliacoesDestino($idDestino) {
+        if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+        $idDestino = (int) $idDestino;
+        
         // Busca avaliações do destino
         $avaliacoes = $this->avaliacaoModel->buscarAvaliacoesPorDestino($idDestino);
         $mediaAvaliacoes = $this->avaliacaoModel->calcularMediaAvaliacoes($idDestino);
@@ -84,8 +82,8 @@ error_log('Depois do session_start(): ' . session_status());
         
         // Verifica se o usuário atual já avaliou
         $avaliacaoUsuario = null;
-        if (isset($_SESSION['usuario_id'])) {
-            $avaliacaoUsuario = $this->avaliacaoModel->buscarAvaliacaoUsuario($_SESSION['usuario_id'], $idDestino);
+        if (isset($_SESSION['usuario']['id_usuario'])) {
+            $avaliacaoUsuario = $this->avaliacaoModel->buscarAvaliacaoUsuario($_SESSION['usuario']['id_usuario'], $idDestino);
         }
         
         return [

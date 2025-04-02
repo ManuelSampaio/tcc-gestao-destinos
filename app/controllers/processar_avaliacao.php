@@ -8,7 +8,10 @@ use App\Models\Avaliacao;
 
 header('Content-Type: application/json');
 
-// Verificar se o usuário está logado
+// Depuração: Verificar se a sessão contém os dados esperados
+error_log('Sessão Atual: ' . print_r($_SESSION, true));
+
+// Verificar se o usuário está logado corretamente
 if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['id_usuario'])) {
     echo json_encode([
         'sucesso' => false,
@@ -18,7 +21,7 @@ if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['id_usuario'])) 
 }
 
 // Verificar se os dados necessários foram enviados
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id_destino']) || !isset($_POST['nota'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['id_destino']) || empty($_POST['nota'])) {
     echo json_encode([
         'sucesso' => false,
         'mensagem' => 'Dados inválidos.'
@@ -57,36 +60,23 @@ try {
             'comentario' => $comentario
         ]);
         
-        if ($resultado) {
-            echo json_encode([
-                'sucesso' => true,
-                'mensagem' => 'Avaliação atualizada com sucesso!'
-            ]);
-        } else {
-            echo json_encode([
-                'sucesso' => false,
-                'mensagem' => 'Erro ao atualizar avaliação.'
-            ]);
-        }
+        echo json_encode([
+            'sucesso' => $resultado,
+            'mensagem' => $resultado ? 'Avaliação atualizada com sucesso!' : 'Erro ao atualizar avaliação.'
+        ]);
     } else {
         // Adicionar nova avaliação
         $resultado = $avaliacaoModel->adicionarAvaliacao($dados);
         
-        if ($resultado) {
-            echo json_encode([
-                'sucesso' => true,
-                'mensagem' => 'Avaliação enviada com sucesso!'
-            ]);
-        } else {
-            echo json_encode([
-                'sucesso' => false,
-                'mensagem' => 'Erro ao enviar avaliação.'
-            ]);
-        }
+        echo json_encode([
+            'sucesso' => $resultado,
+            'mensagem' => $resultado ? 'Avaliação enviada com sucesso!' : 'Erro ao enviar avaliação.'
+        ]);
     }
 } catch (Exception $e) {
+    error_log('Erro ao processar avaliação: ' . $e->getMessage());
     echo json_encode([
         'sucesso' => false,
-        'mensagem' => 'Erro ao processar avaliação: ' . $e->getMessage()
+        'mensagem' => 'Erro ao processar avaliação. Tente novamente mais tarde.'
     ]);
 }

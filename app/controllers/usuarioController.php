@@ -35,9 +35,9 @@ class UsuarioController
 
     private function iniciarSessao()
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
+        if (session_status() === PHP_SESSION_NONE) {
             session_start();
-        }
+        }        
     }
 
     private function obterTipoUsuarioLogado(): string
@@ -75,33 +75,25 @@ class UsuarioController
     public function autenticarUsuario($email, $senha): array {
         $usuario = $this->usuarioModel->buscarPorEmail($email);
     
-        error_log("Tentativa de login email: " . $email);
-        
-        if (!$usuario) {
-            error_log("Usuário não encontrado para o email: " . $email);
-            return ['success' => false, 'message' => 'Usuário não encontrado.'];
-        }
-    
-        error_log("Dados do usuário encontrado: " . json_encode($usuario));
-        error_log("Senha informada: " . $senha);
-        error_log("Senha banco: " . $usuario['senha']);
-        error_log("Resultado verificação: " . (password_verify($senha, $usuario['senha']) ? "SUCESSO" : "FALHA"));
-    
-        if (!isset($usuario['senha']) || !password_verify($senha, $usuario['senha'])) {
-            error_log("Senha incorreta para o email: " . $email);
+        if (!$usuario || !isset($usuario['senha']) || !password_verify($senha, $usuario['senha'])) {
             return ['success' => false, 'message' => 'Credenciais inválidas.'];
         }
     
-        return [
-            'success' => true,
-            'usuario' => [
-                'id_usuario' => $usuario['id_usuario'],
-                'nome' => $usuario['nome'],
-                'email' => $usuario['email'],
-                'tipo_usuario' => $usuario['tipo_usuario']
-            ]
+        // Inicia a sessão antes de definir os dados do usuário
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    
+        $_SESSION['usuario'] = [
+            'id_usuario' => $usuario['id_usuario'],
+            'nome' => $usuario['nome'],
+            'email' => $usuario['email'],
+            'tipo_usuario' => $usuario['tipo_usuario']
         ];
+    
+        return ['success' => true, 'usuario' => $_SESSION['usuario']];
     }
+    
     
     public function listarUsuarios($pagina = 1, $usuariosPorPagina = 10) {
         try {
