@@ -1,0 +1,200 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Corpo da página */
+body {
+    background: linear-gradient(to right, #eef2f3, #d9e7ff);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Container principal */
+.container {
+    max-width: 900px;
+    width: 100%;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Título principal */
+h1 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Painel de Resumo */
+.dashboard {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* Estilização dos cards */
+.card {
+    width: 220px;
+    background: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card .icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+/* Cores dos ícones */
+.icon-green { background: #4CAF50; } /* Verde */
+.icon-blue { background: #2196F3; } /* Azul */
+.icon-red { background: #FF5722; } /* Vermelho */
+.icon-orange { background: #FFC107; } /* Laranja */
+
+.card h2 {
+    font-size: 26px;
+    color: #333;
+}
+
+.card p {
+    font-size: 15px;
+    color: #555;
+}
+
+/* Container de Destinos */
+.destinos-container {
+    margin-top: 20px;
+}
+
+.destinos-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Cartão de destino */
+.destino-card {
+    width: 280px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.destino-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.destino-card h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.destino-card p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Tabela de Destinos */
+.table-container {
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table thead {
+    background: #007BFF;
+    color: white;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+table tbody tr:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+/* Botões de Ação */
+.botoes {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn {
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.adicionar {
+    background: #28A745;
+    color: white;
+}
+
+.adicionar:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+.voltar {
+    background: #dc3545;
+    color: white;
+}
+
+.voltar:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .dashboard, .destinos-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .card, .destino-card {
+        width: 90%;
+    }
+}

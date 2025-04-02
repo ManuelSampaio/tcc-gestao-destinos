@@ -1,0 +1,132 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Estilo do cabeçalho */
+.header {
+    background: #007bff;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+.header h1 {
+    margin-bottom: 10px;
+}
+
+.header p {
+    font-size: 1.2em;
+}
+
+/* Estilo do container de destinos */
+.destinos-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Estilo dos cartões de destino */
+.destino-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f9f9f9;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.destino-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.destino-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-bottom: 1px solid #ddd;
+}
+
+.destino-card h3 {
+    margin: 15px 0 5px;
+    font-size: 1.4em;
+}
+
+.destino-card p {
+    font-size: 1em;
+    color: #666;
+    padding: 0 10px;
+}
+
+.destino-card .badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ff9800;
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Estilo da mensagem vazia */
+.empty-message {
+    text-align: center;
+    font-size: 1.2em;
+    color: #999;
+}
+
+/* Estilo do rodapé */
+.footer {
+    text-align: center;
+    padding: 10px;
+    background: #007bff;
+    color: #fff;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer p {
+    margin: 0;
+}
+
+/* Estilo responsivo */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .header p {
+        font-size: 1em;
+    }
+
+    .destinos-container {
+        padding: 10px;
+    }
+
+    .destino-card img {
+        height: 150px;
+    }
+
+    .footer {
+        font-size: 0.9em;
+    }
+}
