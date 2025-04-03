@@ -102,15 +102,29 @@ try {
             color: #555;
         }
 
-        .map-container {
+        .location-container {
             margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            text-align: center;
         }
 
-        iframe {
-            width: 100%;
-            height: 400px;
-            border: none;
-            border-radius: 10px;
+        .location-container h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .location-container p {
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .location-icon {
+            font-size: 2.5rem;
+            color: #1e90ff;
+            margin-bottom: 1rem;
         }
 
         /* Estilos para avaliações */
@@ -226,123 +240,123 @@ try {
 
         /* Estilos para o formulário de avaliação */
         .avaliacoes-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-}
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
 
-.avaliacoes-cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
+        .avaliacoes-cabecalho {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
 
-.avaliacoes-cabecalho h3 {
-    margin: 0;
-    font-size: 1.5rem;
-}
+        .avaliacoes-cabecalho h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
 
-.media-avaliacoes {
-    display: flex;
-    align-items: center;
-}
+        .media-avaliacoes {
+            display: flex;
+            align-items: center;
+        }
 
-.estrelas {
-    color: #FFD700;
-    margin-right: 10px;
-}
+        .estrelas {
+            color: #FFD700;
+            margin-right: 10px;
+        }
 
-.pontuacao-media {
-    font-size: 1rem;
-}
+        .pontuacao-media {
+            font-size: 1rem;
+        }
 
-.avaliacoes-acoes {
-    margin-bottom: 30px;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-}
+        .avaliacoes-acoes {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
 
-.login-avaliacao {
-    text-align: center;
-    padding: 10px;
-}
+        .login-avaliacao {
+            text-align: center;
+            padding: 10px;
+        }
 
-.nova-avaliacao h4 {
-    margin-top: 0;
-}
+        .nova-avaliacao h4 {
+            margin-top: 0;
+        }
 
-.avaliacao-nota {
-    margin-bottom: 15px;
-}
+        .avaliacao-nota {
+            margin-bottom: 15px;
+        }
 
-.selecao-estrelas {
-    display: inline-block;
-    margin-left: 10px;
-    cursor: pointer;
-}
+        .selecao-estrelas {
+            display: inline-block;
+            margin-left: 10px;
+            cursor: pointer;
+        }
 
-.avaliacao-comentario textarea {
-    width: 100%;
-    padding: 10px;
-    height: 100px;
-    margin-top: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
+        .avaliacao-comentario textarea {
+            width: 100%;
+            padding: 10px;
+            height: 100px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
 
-.nova-avaliacao button {
-    margin-top: 10px;
-    padding: 8px 16px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
+        .nova-avaliacao button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
 
-.lista-avaliacoes h4 {
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-}
+        .lista-avaliacoes h4 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
 
-.review {
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid #eee;
-    border-radius: 5px;
-}
+        .review {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
 
-.review-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
 
-.review-autor {
-    font-weight: bold;
-}
+        .review-autor {
+            font-weight: bold;
+        }
 
-.review-data {
-    color: #777;
-    font-size: 0.9rem;
-}
+        .review-data {
+            color: #777;
+            font-size: 0.9rem;
+        }
 
-.review-comentario {
-    margin-top: 10px;
-    line-height: 1.5;
-}
+        .review-comentario {
+            margin-top: 10px;
+            line-height: 1.5;
+        }
 
-.sem-avaliacoes {
-    font-style: italic;
-    color: #777;
-    text-align: center;
-    padding: 20px;
-}
+        .sem-avaliacoes {
+            font-style: italic;
+            color: #777;
+            text-align: center;
+            padding: 20px;
+        }
 
         textarea {
             padding: 0.75rem;
@@ -402,6 +416,62 @@ try {
             margin-bottom: 1rem;
             display: none;
         }
+
+        /* Estilos para botão fixo de voltar */
+        .fixed-back-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: #1e90ff;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            opacity: 0.8;
+        }
+
+        .fixed-back-btn i {
+            font-size: 1.5rem;
+        }
+
+        .fixed-back-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+            background-color: #1c7ed6;
+        }
+
+        @media (max-width: 768px) {
+            .fixed-back-btn {
+                width: 45px;
+                height: 45px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .destino-info {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .avaliacoes-cabecalho {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .media-avaliacoes {
+                margin-top: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -414,86 +484,26 @@ try {
             <div class="destino-info">
                 <h2><?= htmlspecialchars($destino['nome_destino']) ?></h2>
                 <p><strong>Descrição:</strong> <?= htmlspecialchars($destino['descricao'] ?? 'Descrição não disponível') ?></p>
-                <p><strong>Localização:</strong> <?= htmlspecialchars($destino['localizacao'] ?? 'Não disponível') ?></p>
                 <p><strong>Atividades:</strong> <?= htmlspecialchars($destino['atividades'] ?? 'Informação não disponível') ?></p>
-                <a href="listar_destino.php" class="back-btn">Voltar</a>
             </div>
-            <div class="map-container">
-                <iframe 
-                    src="https://www.google.com/maps/embed/v1/place?key=SUA_CHAVE_API&q=<?= urlencode($destino['localizacao'] ?? 'Angola') ?>"
-                    allowfullscreen>
-                </iframe>
+            <div class="location-container">
+                <div class="location-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <h3>Localização</h3>
+                <p><?= htmlspecialchars($destino['localizacao'] ?? 'Localização não disponível') ?></p>
             </div>
         </section>
         <section class="reviews">
         <div class="avaliacoes-container">
-    <div class="avaliacoes-cabecalho">
-        <h3>Avaliações</h3>
-        <div class="media-avaliacoes">
-            <div class="estrelas">
-                <?php 
-                $mediaArredondada = round($mediaAvaliacoes);
-                for ($i = 1; $i <= 5; $i++) {
-                    if ($i <= $mediaArredondada) {
-                        echo '<i class="fas fa-star"></i>';
-                    } else {
-                        echo '<i class="far fa-star"></i>';
-                    }
-                }
-                ?>
-            </div>
-            <div class="pontuacao-media"><strong><?= number_format($mediaAvaliacoes, 1) ?></strong> de 5 (<?= $totalAvaliacoes ?> avaliações)</div>
-        </div>
-    </div>
-
-    <div class="avaliacoes-acoes">
-    <?php if(isset($_SESSION['usuario']) && isset($_SESSION['usuario']['id_usuario'])): ?>
-            <div class="nova-avaliacao">
-                <h4><?= $avaliacaoUsuario ? 'Editar sua avaliação' : 'Avaliar este destino' ?></h4>
-                <div class="mensagem-sucesso" id="mensagem-sucesso"></div>
-                <div class="mensagem-erro" id="mensagem-erro"></div>
-                <form id="formulario-avaliacao">
-                    <input type="hidden" name="id_destino" value="<?= $destinoId ?>">
-                    <div class="avaliacao-nota">
-                        <label>Sua avaliação:</label>
-                        <div class="selecao-estrelas" id="selecao-estrelas">
-                            <?php 
-                            $notaUsuario = $avaliacaoUsuario ? $avaliacaoUsuario['nota'] : 0;
-                            for ($i = 1; $i <= 5; $i++) {
-                                $classe = $i <= $notaUsuario ? 'fas fa-star estrela' : 'far fa-star estrela estrela-vazia';
-                                echo "<i class=\"$classe\" data-valor=\"$i\"></i>";
-                            }
-                            ?>
-                        </div>
-                        <input type="hidden" name="nota" id="nota-input" value="<?= $notaUsuario ?>">
-                    </div>
-                    <div class="avaliacao-comentario">
-                        <label>Comentário:</label>
-                        <textarea name="comentario" maxlength="500" placeholder="Conte sua experiência..."><?= htmlspecialchars($avaliacaoUsuario['comentario'] ?? '') ?></textarea>
-                    </div>
-                    <button type="submit"><?= $avaliacaoUsuario ? 'Atualizar Avaliação' : 'Enviar Avaliação' ?></button>
-                </form>
-            </div>
-        <?php else: ?>
-            <div class="login-avaliacao">
-                <p>Faça <a href="login.php">login</a> para avaliar este destino.</p>
-            </div>
-        <?php endif; ?>
-    </div>
-
-    <div class="lista-avaliacoes">
-        <?php if (!empty($avaliacoes)): ?>
-            <h4>Comentários dos usuários</h4>
-            <?php foreach ($avaliacoes as $avaliacao): ?>
-                <div class="review">
-                    <div class="review-header">
-                        <div class="review-autor"><?= htmlspecialchars($avaliacao['nome_usuario']) ?></div>
-                        <div class="review-data"><?= date('d/m/Y', strtotime($avaliacao['data_avaliacao'])) ?></div>
-                    </div>
+            <div class="avaliacoes-cabecalho">
+                <h3>Avaliações</h3>
+                <div class="media-avaliacoes">
                     <div class="estrelas">
                         <?php 
+                        $mediaArredondada = round($mediaAvaliacoes);
                         for ($i = 1; $i <= 5; $i++) {
-                            if ($i <= $avaliacao['nota']) {
+                            if ($i <= $mediaArredondada) {
                                 echo '<i class="fas fa-star"></i>';
                             } else {
                                 echo '<i class="far fa-star"></i>';
@@ -501,14 +511,80 @@ try {
                         }
                         ?>
                     </div>
-                    <p class="review-comentario"><?= htmlspecialchars($avaliacao['comentario'] ?? 'Sem comentário.') ?></p>
+                    <div class="pontuacao-media"><strong><?= number_format($mediaAvaliacoes, 1) ?></strong> de 5 (<?= $totalAvaliacoes ?> avaliações)</div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="sem-avaliacoes">Nenhuma avaliação disponível para este destino.</p>
-        <?php endif; ?>
-    </div>
-</div>
+            </div>
+
+            <div class="avaliacoes-acoes">
+            <?php if(isset($_SESSION['usuario']) && isset($_SESSION['usuario']['id_usuario'])): ?>
+                    <div class="nova-avaliacao">
+                        <h4><?= $avaliacaoUsuario ? 'Editar sua avaliação' : 'Avaliar este destino' ?></h4>
+                        <div class="mensagem-sucesso" id="mensagem-sucesso"></div>
+                        <div class="mensagem-erro" id="mensagem-erro"></div>
+                        <form id="formulario-avaliacao">
+                            <input type="hidden" name="id_destino" value="<?= $destinoId ?>">
+                            <div class="avaliacao-nota">
+                                <label>Sua avaliação:</label>
+                                <div class="selecao-estrelas" id="selecao-estrelas">
+                                    <?php 
+                                    $notaUsuario = $avaliacaoUsuario ? $avaliacaoUsuario['nota'] : 0;
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        $classe = $i <= $notaUsuario ? 'fas fa-star estrela' : 'far fa-star estrela estrela-vazia';
+                                        echo "<i class=\"$classe\" data-valor=\"$i\"></i>";
+                                    }
+                                    ?>
+                                </div>
+                                <input type="hidden" name="nota" id="nota-input" value="<?= $notaUsuario ?>">
+                            </div>
+                            <div class="avaliacao-comentario">
+                                <label>Comentário:</label>
+                                <textarea name="comentario" maxlength="500" placeholder="Conte sua experiência..."><?= htmlspecialchars($avaliacaoUsuario['comentario'] ?? '') ?></textarea>
+                            </div>
+                            <button type="submit"><?= $avaliacaoUsuario ? 'Atualizar Avaliação' : 'Enviar Avaliação' ?></button>
+                        </form>
+                    </div>
+                <?php else: ?>
+                    <div class="login-avaliacao">
+                        <p>Faça <a href="login.php">login</a> para avaliar este destino.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="lista-avaliacoes">
+                <?php if (!empty($avaliacoes)): ?>
+                    <h4>Comentários dos usuários</h4>
+                    <?php foreach ($avaliacoes as $avaliacao): ?>
+                        <div class="review">
+                            <div class="review-header">
+                                <div class="review-autor"><?= htmlspecialchars($avaliacao['nome_usuario']) ?></div>
+                                <div class="review-data"><?= date('d/m/Y', strtotime($avaliacao['data_avaliacao'])) ?></div>
+                            </div>
+                            <div class="estrelas">
+                                <?php 
+                                for ($i = 1; $i <= 5; $i++) {
+                                    if ($i <= $avaliacao['nota']) {
+                                        echo '<i class="fas fa-star"></i>';
+                                    } else {
+                                        echo '<i class="far fa-star"></i>';
+                                    }
+                                }
+                                ?>
+                            </div>
+                            <p class="review-comentario"><?= htmlspecialchars($avaliacao['comentario'] ?? 'Sem comentário.') ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="sem-avaliacoes">Nenhuma avaliação disponível para este destino.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        </section>
+        
+        <!-- Botão fixo de voltar -->
+        <a href="listar_destino.php" class="fixed-back-btn" title="Voltar para a lista de destinos">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </main>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -518,6 +594,21 @@ try {
         const formulario = document.getElementById('formulario-avaliacao');
         const mensagemSucesso = document.getElementById('mensagem-sucesso');
         const mensagemErro = document.getElementById('mensagem-erro');
+        const fixedBackBtn = document.querySelector('.fixed-back-btn');
+
+        // Mostrar/ocultar botão de voltar fixo baseado no scroll
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                fixedBackBtn.style.opacity = '0.8';
+            } else {
+                fixedBackBtn.style.opacity = '0';
+            }
+        });
+        
+        // Configuração inicial do botão (escondido no topo)
+        if (window.scrollY <= 300) {
+            fixedBackBtn.style.opacity = '0';
+        }
 
         // Configurar seleção de estrelas
         estrelas.forEach(estrela => {
