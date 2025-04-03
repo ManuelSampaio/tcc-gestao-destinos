@@ -1,4 +1,7 @@
 <?php 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once '../app/controllers/DestinoController.php'; 
@@ -444,7 +447,7 @@ try {
     </div>
 
     <div class="avaliacoes-acoes">
-        <?php if(isset($_SESSION['usuario_id'])): ?>
+    <?php if(isset($_SESSION['usuario']) && isset($_SESSION['usuario']['id_usuario'])): ?>
             <div class="nova-avaliacao">
                 <h4><?= $avaliacaoUsuario ? 'Editar sua avaliação' : 'Avaliar este destino' ?></h4>
                 <div class="mensagem-sucesso" id="mensagem-sucesso"></div>

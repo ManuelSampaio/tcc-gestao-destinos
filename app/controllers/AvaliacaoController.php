@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 require_once __DIR__ . '/../../config/database.php';
@@ -19,9 +20,13 @@ class AvaliacaoController {
 
     public function processarAvaliacao($dados) {
         if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.gc_maxlifetime', 3600); // Sessão dura 1 hora
+ini_set('session.cookie_lifetime', 3600); // Cookie dura 1 hora
+session_start();
+
     session_start();
 }
-        error_log('Sessão Atual: ' . print_r($_SESSION, true)); // Para depuração
+        error_log('Sessão antes da verificação: ' . print_r($_SESSION, true));
 
         // Verifica se usuário está logado corretamente
         if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['id_usuario'])) { 

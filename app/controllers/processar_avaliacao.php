@@ -43,13 +43,6 @@ try {
     $nota = (int)$_POST['nota'];
     $comentario = $_POST['comentario'] ?? '';
     
-    $dados = [
-        'id_usuario' => $idUsuario,
-        'id_destino' => $idDestino,
-        'nota' => $nota,
-        'comentario' => $comentario
-    ];
-    
     // Verificar se o usuário já avaliou este destino
     $jaAvaliou = $avaliacaoModel->verificarSeJaAvaliou($idUsuario, $idDestino);
     
@@ -66,7 +59,14 @@ try {
         ]);
     } else {
         // Adicionar nova avaliação
-        $resultado = $avaliacaoModel->adicionarAvaliacao($dados);
+        $dadosAvaliacao = [
+            'id_usuario' => $idUsuario,
+            'id_destino' => $idDestino,
+            'nota' => $nota,
+            'comentario' => $comentario
+        ];
+        
+        $resultado = $avaliacaoModel->adicionarAvaliacao($dadosAvaliacao);
         
         echo json_encode([
             'sucesso' => $resultado,
