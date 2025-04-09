@@ -1,11 +1,9 @@
 <?php 
 require_once __DIR__ . '/../config/database.php';
 require_once '../app/models/DestinoModel.php'; 
-require_once '../app/models/CategoriaModel.php'; // Adicionado modelo de categorias
 
 use Config\Database;
 use App\Models\DestinoModel;
-use App\Models\CategoriaModel; // Importação do modelo de categorias
 
 try {
     // Inicializa conexão com o banco de dados
@@ -14,15 +12,9 @@ try {
     
     // Inicializa o modelo de destinos
     $destinoModel = new DestinoModel($conn);
-    
-    // Inicializa o modelo de categorias
-    $categoriaModel = new CategoriaModel($conn);
 
     // Obter os destinos existentes
     $destinos = $destinoModel->obterDestinos();
-    
-    // Obter todas as categorias
-    $categorias = $categoriaModel->obterCategorias();
 } catch (Exception $e) {
     die("Erro ao carregar os dados: " . htmlspecialchars($e->getMessage()));
 }
@@ -136,31 +128,6 @@ try {
             outline: none;
             border-color: #1e90ff;
             box-shadow: 0 2px 10px rgba(30, 144, 255, 0.2);
-        }
-        
-        /* Botão Limpar Filtros */
-        .clear-filter {
-            background-color: #f0f0f0;
-            color: #666;
-            border: none;
-            border-radius: 30px;
-            padding: 0.75rem 1.5rem;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-        
-        .clear-filter:hover {
-            background-color: #e0e0e0;
-            color: #333;
-        }
-        
-        .clear-filter i {
-            font-size: 0.8rem;
         }
 
         .destinos-container {
@@ -322,7 +289,6 @@ try {
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
             grid-column: 1 / -1;
-            display: none; /* Inicialmente oculto */
         }
 
         .footer {
@@ -338,30 +304,30 @@ try {
             margin: 0;
         }
 
+        /* Removido o botão voltar antigo */
+        /* .back-button {
+            display: inline-block;
+            margin: 1rem auto;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            color: white;
+            background-color: #1e90ff;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #4682b4;
+        } */
+
         /* Mensagem de contagem de resultados */
         .result-counter {
             text-align: center;
             margin: 1rem auto;
             color: #666;
             font-size: 0.95rem;
-        }
-        
-        /* Indicador de filtro ativo */
-        .filter-active {
-            background-color: #e0f0ff;
-            border: 1px solid #1e90ff;
-        }
-        
-        /* Indicador visual para categoria selecionada */
-        .filter-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 8px;
-            height: 8px;
-            background-color: #1e90ff;
-            border-radius: 50%;
-            display: none;
         }
 
         /* Destaque para destinos populares */
@@ -389,34 +355,6 @@ try {
         .destino-card {
             animation: fadeIn 0.5s ease forwards;
         }
-        
-        /* Animação para quando não há resultados */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        
-        .no-results-shake {
-            animation: shake 0.8s ease;
-        }
-        
-        /* Tags de categoria */
-        .categoria-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .categoria-tag {
-            background-color: #f0f8ff;
-            color: #1e90ff;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            border: 1px solid #c9e3ff;
-        }
 
         /* Responsividade para telas muito pequenas */
         @media (max-width: 768px) {
@@ -439,10 +377,6 @@ try {
                 width: 45px;
                 height: 45px;
             }
-            
-            .search-filter {
-                flex-direction: column;
-            }
         }
 
         @media (max-width: 350px) {
@@ -453,6 +387,10 @@ try {
             .destino-card {
                 height: auto;
                 min-height: 500px;
+            }
+            
+            .search-filter {
+                flex-direction: column;
             }
             
             .search-box, .filter-box {
@@ -476,41 +414,19 @@ try {
                 <i class="fas fa-filter"></i>
                 <select id="filter">
                     <option value="">Todas as Categorias</option>
-                    <?php if (!empty($categorias)): ?>
-                        <?php foreach ($categorias as $categoria): ?>
-                            <option value="<?= htmlspecialchars($categoria['id_categoria']) ?>">
-                                <?= htmlspecialchars($categoria['nome_categoria']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <!-- Fallback para categorias estáticas caso o modelo não funcione -->
-                        <option value="1">Praias e Litoral</option>
-                        <option value="2">Parques Nacionais e Reservas</option>
-                        <option value="3">Montanhas e Formações Rochosas</option>
-                        <option value="4">Patrimônio Histórico-Cultural</option>
-                        <option value="5">Ecoturismo e Natureza</option>
-                        <option value="6">Desertos e Savanas</option>
-                        <option value="7">Turismo Urbano</option>
-                        <option value="8">Turismo Rural e Comunitário</option>
-                        <option value="9">Cultura e Festivais</option>
-                        <option value="10">Turismo Religioso</option>
-                        <option value="11">Roteiros Etnográficos</option>
-                    <?php endif; ?>
+                    <option value="praias">Praias</option>
+                    <option value="montanhas">Montanhas</option>
+                    <option value="cidades">Cidades Históricas</option>
                 </select>
-                <div class="filter-indicator"></div>
             </div>
-            <button class="clear-filter" id="clearFilters">
-                <i class="fas fa-times"></i> Limpar Filtros
-            </button>
         </div>
 
         <div class="result-counter" id="resultCounter"></div>
 
-        <section class="destinos-container" id="destinosContainer">
+        <section class="destinos-container">
             <?php if (!empty($destinos)): ?>
                 <?php foreach ($destinos as $destino): ?>
-                    <div class="destino-card" data-category="<?= htmlspecialchars($destino['id_categoria'] ?? '') ?>" 
-                         data-category-name="<?= htmlspecialchars($destino['categoria'] ?? '') ?>">
+                    <div class="destino-card" data-category="<?= htmlspecialchars($destino['categoria'] ?? '') ?>">
                         <!-- Exibição da categoria -->
                         <?php if (!empty($destino['categoria'])): ?>
                             <div class="categoria-badge"><?= htmlspecialchars($destino['categoria']) ?></div>
@@ -520,8 +436,7 @@ try {
                         <a href="detalhes_destino.php?id=<?= htmlspecialchars($destino['id']) ?>">
                             <div class="imagem-container">
                                 <img src="../uploads/<?= !empty($destino['imagem']) ? htmlspecialchars($destino['imagem']) : 'default.jpg' ?>" 
-                                    alt="Imagem de <?= htmlspecialchars($destino['nome_destino']) ?>"
-                                    loading="lazy">
+                                    alt="Imagem de <?= htmlspecialchars($destino['nome_destino']) ?>">
                                 <!-- Indicador visual de clique -->
                                 <div class="card-click-indicator">
                                     <i class="fas fa-arrow-right"></i>
@@ -530,13 +445,6 @@ try {
                             <div class="destino-card-content">
                                 <h3><?= htmlspecialchars($destino['nome_destino']) ?></h3>
                                 <p><?= htmlspecialchars($destino['descricao'] ?? 'Descrição não disponível') ?></p>
-                                
-                                <!-- Tags de categoria - para casos de múltiplas categorias no futuro -->
-                                <?php if (!empty($destino['categoria'])): ?>
-                                <div class="categoria-tags">
-                                    <span class="categoria-tag"><?= htmlspecialchars($destino['categoria']) ?></span>
-                                </div>
-                                <?php endif; ?>
                             </div>
                             <div class="destino-card-footer">
                                 <span class="localizacao">
@@ -548,18 +456,12 @@ try {
                         </a>
                     </div>
                 <?php endforeach; ?>
-            <?php endif; ?>
-            
-            <!-- Mensagem para quando não houver resultados -->
-            <div class="empty-message" id="emptyMessage">
-                <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem; color: #ccc;"></i><br>
-                Nenhum destino encontrado com os critérios selecionados.
-                <p style="margin-top: 1rem;">
-                    <button id="resetSearch" class="clear-filter">
-                        <i class="fas fa-redo"></i> Redefinir Busca
-                    </button>
+            <?php else: ?>
+                <p class="empty-message">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 1rem; color: #ccc;"></i><br>
+                    Nenhum destino cadastrado.
                 </p>
-            </div>
+            <?php endif; ?>
         </section>
 
         <!-- Botão voltar fixo -->
@@ -574,29 +476,14 @@ try {
     <script>
         // Função para atualizar o contador de resultados
         function updateResultCounter() {
-            const visibleCards = document.querySelectorAll('.destino-card:not([style*="display: none"])');
+            const visibleCards = document.querySelectorAll('.destino-card[style*="display: flex"], .destino-card:not([style*="display"])');
             const totalCards = document.querySelectorAll('.destino-card');
             const counterElement = document.getElementById('resultCounter');
-            const emptyMessage = document.getElementById('emptyMessage');
-            const destinosContainer = document.getElementById('destinosContainer');
             
-            if (visibleCards.length === 0) {
-                // Nenhum resultado encontrado
-                emptyMessage.style.display = 'block';
-                emptyMessage.classList.add('no-results-shake');
-                setTimeout(() => {
-                    emptyMessage.classList.remove('no-results-shake');
-                }, 800);
-                counterElement.textContent = 'Nenhum destino encontrado';
+            if (visibleCards.length === totalCards.length) {
+                counterElement.textContent = `Mostrando todos os ${totalCards.length} destinos`;
             } else {
-                // Resultados encontrados
-                emptyMessage.style.display = 'none';
-                
-                if (visibleCards.length === totalCards.length) {
-                    counterElement.textContent = `Mostrando todos os ${totalCards.length} destinos`;
-                } else {
-                    counterElement.textContent = `Mostrando ${visibleCards.length} de ${totalCards.length} destinos`;
-                }
+                counterElement.textContent = `Mostrando ${visibleCards.length} de ${totalCards.length} destinos`;
             }
         }
 
@@ -605,76 +492,37 @@ try {
             card.style.animationDelay = `${index * 0.1}s`;
         });
 
-        // Função para filtrar destinos
-        function filterDestinos() {
-            const searchValue = document.getElementById('search').value.toLowerCase();
-            const filterValue = document.getElementById('filter').value;
-            const filterBox = document.querySelector('.filter-box');
+        // Busca por texto
+        document.getElementById('search').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
             const cards = document.querySelectorAll('.destino-card');
-            let hasResults = false;
-            
-            // Adicionar indicador visual para filtro ativo
-            if (filterValue) {
-                filterBox.classList.add('filter-active');
-                document.querySelector('.filter-indicator').style.display = 'block';
-            } else {
-                filterBox.classList.remove('filter-active');
-                document.querySelector('.filter-indicator').style.display = 'none';
-            }
-            
+
             cards.forEach(card => {
                 const title = card.querySelector('h3').textContent.toLowerCase();
                 const description = card.querySelector('p').textContent.toLowerCase();
                 const location = card.querySelector('.localizacao').textContent.toLowerCase();
-                const category = card.getAttribute('data-category');
-                const categoryName = card.getAttribute('data-category-name').toLowerCase();
                 
                 const matchesSearch = title.includes(searchValue) || 
                                     description.includes(searchValue) ||
-                                    location.includes(searchValue) ||
-                                    categoryName.includes(searchValue);
+                                    location.includes(searchValue);
                 
-                const matchesFilter = filterValue === '' || category === filterValue;
-                
-                if (matchesSearch && matchesFilter) {
-                    card.style.display = 'flex';
-                    hasResults = true;
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = matchesSearch ? 'flex' : 'none';
             });
             
             updateResultCounter();
-        }
-
-        // Busca por texto
-        document.getElementById('search').addEventListener('input', filterDestinos);
+        });
 
         // Filtro por categoria
-        document.getElementById('filter').addEventListener('change', filterDestinos);
-        
-        // Limpar filtros
-        document.getElementById('clearFilters').addEventListener('click', function() {
-            document.getElementById('search').value = '';
-            document.getElementById('filter').value = '';
+        document.getElementById('filter').addEventListener('change', function () {
+            const filterValue = this.value.toLowerCase();
+            const cards = document.querySelectorAll('.destino-card');
+
+            cards.forEach(card => {
+                const category = card.getAttribute('data-category').toLowerCase();
+                card.style.display = filterValue === '' || category === filterValue ? 'flex' : 'none';
+            });
             
-            const filterBox = document.querySelector('.filter-box');
-            filterBox.classList.remove('filter-active');
-            document.querySelector('.filter-indicator').style.display = 'none';
-            
-            filterDestinos();
-        });
-        
-        // Resetar busca do botão de mensagem vazia
-        document.getElementById('resetSearch').addEventListener('click', function() {
-            document.getElementById('search').value = '';
-            document.getElementById('filter').value = '';
-            
-            const filterBox = document.querySelector('.filter-box');
-            filterBox.classList.remove('filter-active');
-            document.querySelector('.filter-indicator').style.display = 'none';
-            
-            filterDestinos();
+            updateResultCounter();
         });
 
         // Inicializa o contador de resultados
