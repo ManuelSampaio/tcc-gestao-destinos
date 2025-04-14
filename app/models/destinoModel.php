@@ -20,13 +20,19 @@ class DestinoModel {
      * @return array Lista de destinos.
      * @throws PDOException Caso ocorra um erro na consulta.
      */
-    public function obterDestinos() {
+    public function obterDestinoPorId($id) {
         try {
-            $sql = "SELECT * FROM destinos_turisticos";
-            $query = $this->conn->query($sql);
-            return $query->fetchAll(PDO::FETCH_ASSOC);
+            $sql = "SELECT d.*, l.nome_local as localizacao, c.nome_categoria as categoria
+                    FROM destinos_turisticos d
+                    LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao
+                    LEFT JOIN categorias c ON d.id_categoria = c.id_categoria
+                    WHERE d.id = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            throw new PDOException("Erro ao obter destinos: " . $e->getMessage());
+            throw new PDOException("Erro ao obter destino: " . $e->getMessage());
         }
     }
 
@@ -51,15 +57,16 @@ class DestinoModel {
      * @return array Detalhes do destino.
      * @throws PDOException Caso ocorra um erro na consulta.
      */
-    public function obterDestinoPorId($id) {
+    public function obterDestinos() {
         try {
-            $sql = "SELECT * FROM destinos_turisticos WHERE id = :id";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $sql = "SELECT d.*, c.nome_categoria as categoria, l.nome_local as localizacao 
+                    FROM destinos_turisticos d
+                    LEFT JOIN categorias c ON d.id_categoria = c.id_categoria
+                    LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao";
+            $query = $this->conn->query($sql);
+            return $query->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            throw new PDOException("Erro ao obter destino: " . $e->getMessage());
+            throw new PDOException("Erro ao obter destinos: " . $e->getMessage());
         }
     }
 
@@ -72,15 +79,16 @@ class DestinoModel {
      * @return bool Resultado da operação.
      * @throws PDOException Caso ocorra um erro na consulta.
      */
-    public function cadastrarDestino($nome, $descricao, $localizacao, $imagem) {
+    public function cadastrarDestino($nome, $descricao, $id_localizacao, $imagem, $id_categoria = null) {
         try {
-            $sql = "INSERT INTO destinos_turisticos (nome_destino, descricao, localizacao, imagem) 
-                    VALUES (:nome, :descricao, :localizacao, :imagem)";
+            $sql = "INSERT INTO destinos_turisticos (nome_destino, descricao, id_localizacao, imagem, id_categoria) 
+                    VALUES (:nome, :descricao, :id_localizacao, :imagem, :id_categoria)";
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':descricao', $descricao);
-            $stmt->bindParam(':localizacao', $localizacao);
+            $stmt->bindParam(':id_localizacao', $id_localizacao, PDO::PARAM_INT);
             $stmt->bindParam(':imagem', $imagem);
+            $stmt->bindParam(':id_categoria', $id_categoria, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
             throw new PDOException("Erro ao cadastrar destino: " . $e->getMessage());
@@ -97,16 +105,18 @@ class DestinoModel {
      * @return bool Resultado da operação.
      * @throws PDOException Caso ocorra um erro na consulta.
      */
-    public function atualizarDestino($id, $nome, $descricao, $localizacao, $imagem) {
+    public function atualizarDestino($id, $nome, $descricao, $id_localizacao, $imagem, $id_categoria = null) {
         try {
             $sql = "UPDATE destinos_turisticos 
-                    SET nome_destino = :nome, descricao = :descricao, localizacao = :localizacao, imagem = :imagem 
+                    SET nome_destino = :nome, descricao = :descricao, id_localizacao = :id_localizacao, 
+                    imagem = :imagem, id_categoria = :id_categoria
                     WHERE id = :id";
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':descricao', $descricao);
-            $stmt->bindParam(':localizacao', $localizacao);
+            $stmt->bindParam(':id_localizacao', $id_localizacao, PDO::PARAM_INT);
             $stmt->bindParam(':imagem', $imagem);
+            $stmt->bindParam(':id_categoria', $id_categoria, PDO::PARAM_INT);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -130,4 +140,37 @@ class DestinoModel {
             throw new PDOException("Erro ao excluir destino: " . $e->getMessage());
         }
     }
+
+    /**
+ * Obtém todas as localizações.
+ * @return array Lista de localizações.
+ * @throws PDOException Caso ocorra um erro na consulta.
+ */
+public function obterLocalizacoes() {
+    try {
+        $sql = "SELECT * FROM localizacoes";
+        $query = $this->conn->query($sql);
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        throw new PDOException("Erro ao obter localizações: " . $e->getMessage());
+    }
+}
+
+/**
+ * Obtém uma localização pelo ID.
+ * @param int $id ID da localização.
+ * @return array Detalhes da localização.
+ * @throws PDOException Caso ocorra um erro na consulta.
+ */
+public function obterLocalizacaoPorId($id) {
+    try {
+        $sql = "SELECT * FROM localizacoes WHERE id_localizacao = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        throw new PDOException("Erro ao obter localização: " . $e->getMessage());
+    }
+}
 }

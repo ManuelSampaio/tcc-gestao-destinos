@@ -1,0 +1,55 @@
+/* Estilos para a página de Destinos Favoritos */
+.favoritos-container {
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mensagem-vazio {
+    color: #7f8c8d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+  }
+  
+  .lista-favoritos {
+    list-style-type: none;
+  }
+  
+  .destino-item {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+  }
+  
+  .destino-item:last-child {
+    border-bottom: none;
+  }
+  
+  .destino-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .botao-voltar {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  
+  .botao-voltar:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Para manter consistência entre as páginas */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }

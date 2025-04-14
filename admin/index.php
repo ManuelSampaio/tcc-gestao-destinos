@@ -11,6 +11,69 @@ if (isset($_SESSION['usuario']) &&
 
 // Verifica se o usuário está logado (para exibir informações adequadas no menu)
 $usuarioLogado = isset($_SESSION['usuario']) && isset($_SESSION['usuario']['nome']);
+
+// Conexão com o banco de dados
+$conexao = new mysqli("localhost", "root", "", "turismo_angola");
+
+// Verificação de erros de conexão
+if ($conexao->connect_error) {
+    die("Falha na conexão: " . $conexao->connect_error);
+}
+
+// Consulta para as 7 maravilhas de Angola
+// Consulta para as 7 maravilhas de Angola
+$sql_maravilhas = "SELECT d.id, d.nome_destino, d.descricao, d.imagem, l.nome_local as localizacao 
+                  FROM destinos_turisticos d
+                  LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao
+                  WHERE d.is_maravilha = 1 
+                  ORDER BY d.data_cadastro DESC 
+                  LIMIT 7";
+$resultado_maravilhas = $conexao->query($sql_maravilhas);
+
+// Adicione esta linha para depuração
+if (!$resultado_maravilhas) {
+    error_log("Erro na consulta de maravilhas: " . $conexao->error);
+}
+
+// Consulta para todos os destinos
+// Consulta para todos os destinos
+$sql_destinos = "SELECT d.id, d.nome_destino, d.descricao, d.imagem, l.nome_local as localizacao 
+                FROM destinos_turisticos d
+                LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao
+                ORDER BY d.nome_destino ASC 
+                LIMIT 15";
+$resultado_destinos = $conexao->query($sql_destinos);
+
+// Adicione esta linha para depuração
+if (!$resultado_destinos) {
+    error_log("Erro na consulta de destinos: " . $conexao->error);
+}
+// Consulta para os destinos adicionados recentemente
+// Consulta para os destinos adicionados recentemente
+$sql_recentes = "SELECT d.id, d.nome_destino, d.descricao, d.imagem, d.data_cadastro, l.nome_local as localizacao 
+                FROM destinos_turisticos d
+                LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao
+                ORDER BY d.data_cadastro DESC 
+                LIMIT 6";
+$resultado_recentes = $conexao->query($sql_recentes);
+
+// Adicione esta linha para depuração
+if (!$resultado_recentes) {
+    error_log("Erro na consulta de recentes: " . $conexao->error);
+}
+
+// Função para encurtar texto
+function encurtarTexto($texto, $limite = 150) {
+    if (strlen($texto) <= $limite) return $texto;
+    $texto = substr($texto, 0, $limite);
+    return substr($texto, 0, strrpos($texto, ' ')) . '...';
+}
+
+// Função para formatar a data
+function formatarData($data) {
+    $timestamp = strtotime($data);
+    return date('d/m/Y', $timestamp);
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -19,415 +82,476 @@ $usuarioLogado = isset($_SESSION['usuario']) && isset($_SESSION['usuario']['nome
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Destinos Turísticos em Angola</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!--<link rel="stylesheet" href="../assets/css/styles.css"> -- Ajuste para o CSS -->
+    <link rel="stylesheet" href="../assets/css/styleij.css">
     <style>
-        /* Estilos modernos para melhorar a interface */
+        /* Estilos adicionais para o redesign */
         :root {
-            --primary: #1a73e8;
-            --primary-dark: #1557b0;
-            --accent: #ff6b6b;
-            --text-color: #333;
-            --text-light: #6b7280;
-            --background: #f8f9fa;
-            --white: #ffffff;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            --primary-color: #004d40;
+            --secondary-color: #ff9800;
+            --accent-color: #f44336;
+            --light-bg: #f5f5f5;
+            --dark-bg: #212121;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s ease;
+            --border-radius: 8px;
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--background);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        /* Header e navegação modernos */
-        header {
-            background-color: var(--white);
-            box-shadow: var(--shadow);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo img {
-            height: 50px;
-            margin-right: 15px;
-        }
-        
-        .logo-text {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary);
-        }
-        
-        nav {
-            display: flex;
-            align-items: center;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 25px;
-        }
-        
-        nav ul li a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-weight: 500;
-            transition: all 0.3s ease;
+        /* Header Principal */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: var(--transition);
+}
+
+/* Logo */
+header .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espaçamento reduzido para melhor proporção */
+    margin-right: 20px; /* Adiciona espaço entre o logo e os itens de navegação */
+}
+
+header .logo img {
+    height: 60px; /* Tamanho ligeiramente menor para melhor proporção */
+    width: auto;
+    border-radius: 50%; /* Torna o logo circular, se combinar com seu design */
+    /* Se o fundo do seu logo não combinar, considere adicionar: */
+    background-color: transparent; /* Ou uma cor que combine com seu tema */
+}
+
+header .logo-text {
+    font-size: 1.5rem; /* Tamanho ligeiramente menor para melhor equilíbrio */
+    font-weight: bold;
+    color: white; /* Usando branco para melhor contraste com a barra de navegação verde escura */
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); /* Adiciona sombra sutil para melhor legibilidade */
+}
+
+/* Navegação */
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+header nav ul {
+    display: flex;
+    list-style-type: none;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+header nav ul li a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+header nav ul li a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+header nav ul li a i {
+    font-size: 1rem;
+}
+
+/* Caixa de Pesquisa */
+header .search-box {
+    position: relative;
+    flex: 0 1 300px;
+    margin: 0 20px;
+}
+
+header .search-box form {
+    display: flex;
+    align-items: center;
+}
+
+header .search-box input {
+    width: 100%;
+    padding: 10px 15px 10px 35px;
+    border: none;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+header .search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+header .search-box input:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+header .search-box i.fa-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+}
+
+header .search-box button {
+    background-color: var(--secondary-color);
+    color: var(--text-dark);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    margin-left: -40px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: var(--transition);
+    z-index: 2;
+}
+
+header .search-box button:hover {
+    background-color: #ffb74d;
+    transform: translateY(-2px);
+}
+
+/* Botões de Autenticação */
+header .auth-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+header .btn-login,
+header .btn-register,
+header .btn-profile {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+header .btn-login {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+header .btn-register {
+    background-color: var(--secondary-color);
+    color: var(--text-dark);
+}
+
+header .btn-profile {
+    background-color: var(--secondary-color); /* Alterar de rgba(255, 255, 255, 0.1) para var(--secondary-color) */
+    color: var(--text-dark); /* Alterar de var(--text-light) para var(--text-dark) */
+    cursor: pointer;
+}
+
+header .btn-profile:hover {
+    background-color: #ffb74d; /* Alterar de rgba(255, 255, 255, 0.2) para #ffb74d */
+    transform: translateY(-2px);
+}
+header .btn-register:hover {
+    background-color: #ffb74d;
+    transform: translateY(-2px);
+}
+
+/* Dropdown Menu */
+header .dropdown {
+    position: relative;
+}
+
+header .dropdown-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 250px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 0;
+    margin-top: 10px;
+    display: none;
+    z-index: 101;
+}
+
+header .dropdown:hover .dropdown-content {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+header .dropdown-content .user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+header .dropdown-content .user-avatar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+header .dropdown-content .user-details {
+    flex: 1;
+}
+
+header .dropdown-content .user-name {
+    font-weight: bold;
+    color: var(--text-dark);
+    margin-bottom: 3px;
+}
+
+header .dropdown-content .user-role {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+header .dropdown-content a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+header .dropdown-content a:hover {
+    background-color: #f5f5f5;
+}
+
+header .dropdown-content a i {
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+/* Menu Hamburger */
+header .hamburger {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+/* Responsivo */
+@media (max-width: 992px) {
+    header {
+        padding: 15px 20px;
+    }
+    
+    header nav ul {
+        gap: 10px;
+    }
+    
+    header .search-box {
+        flex: 0 1 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    header nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background-color: var(--primary-color);
+        padding: 20px;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    header nav.active {
+        display: flex;
+    }
+    
+    header nav ul {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    header nav ul li {
+        width: 100%;
+    }
+    
+    header nav ul li a {
+        width: 100%;
+        display: flex;
+        padding: 12px 15px;
+    }
+    
+    header .search-box {
+        width: 100%;
+        margin: 10px 0;
+    }
+    
+    header .auth-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    header .hamburger {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    header .logo img {
+        height: 35px;
+    }
+    
+    header .logo-text {
+        font-size: 1.2rem;
+    }
+    
+    header .btn-login,
+    header .btn-register,
+    header .btn-profile {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+        /* Hero Banner com Carrossel */
+        .hero-banner {
             position: relative;
-            padding: 5px 0;
-        }
-        
-        nav ul li a:hover {
-            color: var(--primary);
-        }
-        
-        nav ul li a::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: var(--primary);
-            transition: width 0.3s ease;
-        }
-        
-        nav ul li a:hover::after {
-            width: 100%;
-        }
-        
-        .search-box {
-            position: relative;
-            margin-left: 20px;
-        }
-        
-        .search-box input {
-            padding: 10px 15px 10px 35px;
-            border: 1px solid #ddd;
-            border-radius: 50px;
-            width: 200px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .search-box input:focus {
-            width: 250px;
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
-        }
-        
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-light);
-        }
-        
-        .search-box button {
-            display: none; /* Ocultamos o botão e usamos o ícone */
-        }
-        
-        /* Botões de Autenticação */
-        .auth-buttons {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-left: 20px;
-        }
-        
-        .btn-login, .btn-register, .btn-logout, .btn-profile {
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-login {
-            background-color: transparent;
-            color: var(--primary);
-            border: 1.5px solid var(--primary);
-        }
-        
-        .btn-login:hover {
-            background-color: rgba(26, 115, 232, 0.1);
-        }
-        
-        .btn-register, .btn-profile {
-            background: linear-gradient(180deg, #1a73e8 0%, #1557b0 100%);
-            color: white;
-            border: none;
-        }
-        
-        .btn-register:hover, .btn-profile:hover {
-            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        .btn-logout {
-            background-color: transparent;
-            color: var(--text-light);
-            border: 1.5px solid #ddd;
-        }
-        
-        .btn-logout:hover {
-            background-color: #f0f0f0;
-            color: var(--text-color);
-        }
-        
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 45px;
-            min-width: 200px;
-            background-color: var(--white);
-            box-shadow: var(--shadow);
-            border-radius: 8px;
-            padding: 12px 0;
-            z-index: 1100;
-        }
-        
-        .dropdown-content a {
-            display: block;
-            padding: 10px 20px;
-            text-decoration: none;
-            color: var(--text-color);
-            transition: all 0.2s ease;
-        }
-        
-        .dropdown-content a:hover {
-            background-color: #f0f0f0;
-            color: var(--primary);
-        }
-        
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 8px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            margin-right: 12px;
-        }
-        
-        .user-details {
-            flex: 1;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .user-role {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 2px;
-        }
-        
-        /* Banner moderno e envolvente */
-        .banner {
             height: 100vh;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../assets/images/angola-banner.jpg') no-repeat center center/cover;
+            overflow: hidden;
+        }
+
+        .hero-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            color: white;
+            color: var(--text-light);
             padding: 0 20px;
-            margin-top: 80px;
+            background: rgba(0, 0, 0, 0.4);
         }
-        
-        .banner h1 {
+
+        .hero-content h1 {
             font-size: 3.5rem;
             margin-bottom: 20px;
-            font-weight: 700;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            animation: fadeInDown 1s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            animation: fadeInUp 1s ease;
         }
-        
-        .banner p {
-            font-size: 1.2rem;
+
+        .hero-content p {
+            font-size: 1.3rem;
             max-width: 800px;
             margin-bottom: 30px;
-            opacity: 0.9;
-            animation: fadeInUp 1s ease 0.3s both;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            animation: fadeInUp 1.3s ease;
         }
-        
-        .banner .btn {
-            background: var(--primary);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            animation: fadeInUp 1s ease 0.6s both;
-            border: none;
-            display: inline-block;
+
+      .hero-btn {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    background-color: var(--secondary-color);
+    color: var(--text-dark);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow);
+    animation: fadeInUp 1.6s ease;
+    text-decoration: none; /* Adicione esta linha para remover o sublinhado */
+    display: inline-block; /* Garante que o botão se comporte corretamente */
+}
+
+.hero-btn:hover {
+    background-color: #ffb74d;
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+    text-decoration: none; /* Mantém o botão sem sublinhado mesmo quando hover */
+}
+        /* Seção 7 Maravilhas */
+        .maravilhas {
+            padding: 80px 0;
+            background-color: var(--light-bg);
         }
-        
-        .banner .btn:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: translateY(-3px);
-        }
-        
-        /* Melhorias no carrossel */
-        .carousel {
-            padding: 60px 0;
-            background-color: white;
-            overflow: hidden;
-        }
-        
-        .carousel h2 {
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 2.2rem;
-            color: var(--text-color);
-        }
-        
-        .carousel-inner {
-            display: flex;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Para Firefox */
-            gap: 25px;
-            padding: 20px 5%;
-        }
-        
-        .carousel-inner::-webkit-scrollbar {
-            display: none; /* Para Chrome e Safari */
-        }
-        
-        .carousel-item {
-            min-width: 300px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .carousel-item:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--hover-shadow);
-        }
-        
-        .carousel-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-        }
-        
-        .carousel-item h2 {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            color: white;
-            padding: 20px;
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
-            text-align: left;
-        }
-        
-        .carousel-controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 30px;
-        }
-        
-        .carousel-controls button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: var(--shadow);
-        }
-        
-        .carousel-controls button:hover {
-            background-color: var(--primary-dark);
-            box-shadow: var(--hover-shadow);
-        }
-        
-        /* Cards de destinos modernos */
-        .destinos {
-            padding: 80px 5%;
-            background-color: var(--background);
-        }
-        
-        .destinos h2 {
+
+        .section-header {
             text-align: center;
             margin-bottom: 50px;
+        }
+
+        .section-header h2 {
             font-size: 2.5rem;
-            color: var(--text-color);
+            color: var(--primary-color);
             position: relative;
             padding-bottom: 15px;
+            margin-bottom: 20px;
         }
-        
-        .destinos h2::after {
+
+        .section-header h2::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -435,406 +559,525 @@ $usuarioLogado = isset($_SESSION['usuario']) && isset($_SESSION['usuario']['nome
             transform: translateX(-50%);
             width: 80px;
             height: 3px;
-            background-color: var(--primary);
+            background-color: var(--secondary-color);
         }
-        
+
+        .section-header p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .maravilhas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .maravilha-card {
+            background-color: var(--text-light);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .maravilha-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .maravilha-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--secondary-color);
+            color: var(--text-dark);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .maravilha-img {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .maravilha-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .maravilha-card:hover .maravilha-img img {
+            transform: scale(1.1);
+        }
+
+        .maravilha-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .maravilha-content h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .maravilha-content p {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            flex-grow: 1;
+        }
+
+        .maravilha-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .maravilha-location {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .maravilha-location i {
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+
+        /* Ver Todos Botão */
+        .view-all-container {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .btn-view-all {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-weight: bold;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-view-all:hover {
+            background-color: #00695c;
+            transform: translateY(-3px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .btn-view-all i {
+            margin-left: 8px;
+        }
+
+        /* Seção Destinos */
+        .destinos {
+            padding: 80px 0;
+            background-color: #fff;
+        }
+
         .destinos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
-        
+
         .destino-card {
-            background-color: white;
-            border-radius: 12px;
+            background-color: var(--text-light);
+            border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             position: relative;
+            cursor: pointer;
         }
-        
+
         .destino-card:hover {
             transform: translateY(-10px);
             box-shadow: var(--hover-shadow);
         }
-        
-        .destino-card img {
+
+        .destino-img {
+            position: relative;
             width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
+            height: 220px;
+            overflow: hidden;
         }
-        
+
+        .destino-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .destino-card:hover .destino-img img {
+            transform: scale(1.1);
+        }
+
         .destino-content {
             padding: 20px;
-        }
-        
-        .destino-card h3 {
-            margin: 10px 0;
-            font-size: 1.3rem;
-            color: var(--text-color);
-        }
-        
-        .destino-card p {
-            color: var(--text-light);
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-        
-        .destino-card .badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background-color: var(--accent);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        .destino-card .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
-        
-        .destino-card .btn:hover {
-            background-color: var(--primary-dark);
-            box-shadow: 0 3px 8px rgba(26, 115, 232, 0.3);
-        }
-        
-        /* Seção de fatos interessantes */
-        .fatos {
-            padding: 80px 5%;
-            background-color: white;
-        }
-        
-        .fatos h2 {
-            text-align: center;
-            margin-bottom: 50px;
-            font-size: 2.5rem;
-            color: var(--text-color);
-            position: relative;
-            padding-bottom: 15px;
-        }
-        
-        .fatos h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
-            background-color: var(--primary);
-        }
-        
-        .fatos-carousel {
-            display: flex;
-            overflow-x: hidden;
-            position: relative;
-            scroll-behavior: smooth;
-        }
-        
-        .fato-item {
-            min-width: 100%;
-            padding: 20px;
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
         }
-        
-        .fato-item img {
-            width: 100%;
-            max-width: 500px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            margin-bottom: 20px;
+
+        .destino-content h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            color: var(--primary-color);
         }
-        
-        .fato-item h3 {
-            font-size: 1.8rem;
+
+        .destino-content p {
             margin-bottom: 15px;
-            color: var(--text-color);
+            color: var(--text-dark);
+            flex-grow: 1;
         }
-        
-        .fato-item p {
-            max-width: 600px;
-            color: var(--text-light);
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-        
-        .fatos-buttons {
+
+        .destino-footer {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .destino-location {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .destino-location i {
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+
+        /* Seção Recentes */
+        .recentes {
+            padding: 80px 0;
+            background-color: var(--light-bg);
+        }
+
+        .recentes-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .recentes-slider {
+            display: flex;
             gap: 20px;
-            margin-top: 30px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+            padding: 20px 0;
         }
-        
-        .fatos-buttons .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
+
+        .recentes-slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .recente-card {
+            min-width: 300px;
+            background-color: var(--text-light);
+            border-radius: var(--border-radius);
+            overflow: hidden;
             box-shadow: var(--shadow);
+            transition: var(--transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            cursor: pointer;
         }
-        
-        .fatos-buttons .btn:hover {
-            background-color: var(--primary-dark);
+
+        .recente-card:hover {
+            transform: translateY(-10px);
             box-shadow: var(--hover-shadow);
         }
-        
-        /* Seção Sobre */
-        #sobre {
-            padding: 80px 5%;
-            background-color: var(--background);
-            text-align: center;
-        }
-        
-        #sobre h2 {
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            color: var(--text-color);
-            position: relative;
-            padding-bottom: 15px;
-            display: inline-block;
-        }
-        
-        #sobre h2::after {
-            content: '';
+
+        .recente-badge {
             position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background-color: var(--primary);
+            top: 15px;
+            left: 15px;
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1;
         }
-        
-        #sobre p {
-            max-width: 800px;
-            margin: 0 auto;
-            color: var(--text-color);
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-        
-        /* Footer moderno */
-        footer {
-            background-color: #2c3e50;
-            color: rgba(255, 255, 255, 0.8);
-            padding: 60px 5% 30px;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-        
-        .footer-column h3 {
-            color: white;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            font-weight: 600;
+
+        .recente-img {
             position: relative;
-            padding-bottom: 10px;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
         }
-        
-        .footer-column h3::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 40px;
-            height: 2px;
-            background-color: var(--primary);
+
+        .recente-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
         }
-        
-        .footer-column p {
-            margin-bottom: 15px;
-            line-height: 1.7;
+
+        .recente-card:hover .recente-img img {
+            transform: scale(1.1);
         }
-        
-        .footer-column ul {
-            list-style: none;
-        }
-        
-        .footer-column ul li {
-            margin-bottom: 10px;
-        }
-        
-        .footer-column ul li a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        
-        .footer-column ul li a:hover {
-            color: white;
-            padding-left: 5px;
-        }
-        
-        .social-links {
+
+        .recente-content {
+            padding: 20px;
+            flex-grow: 1;
             display: flex;
-            gap: 15px;
-            margin-top: 20px;
+            flex-direction: column;
         }
-        
-        .social-links a {
+
+        .recente-content h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .recente-content p {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            flex-grow: 1;
+            font-size: 0.95rem;
+        }
+
+        .recente-date {
             display: flex;
             align-items: center;
-            justify-content: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        .recente-date i {
+            margin-right: 5px;
+            color: var(--accent-color);
+        }
+
+        .recentes-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            left: 0;
+            pointer-events: none;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 2;
+        }
+
+        .recentes-nav button {
             width: 40px;
             height: 40px;
-            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            color: white;
-            transition: all 0.3s ease;
+            background-color: var(--secondary-color);
+            color: var(--text-dark);
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
         }
-        
-        .social-links a:hover {
-            background-color: var(--primary);
-            transform: translateY(-3px);
+
+        .recentes-nav button:hover {
+            background-color: #ffb74d;
+            transform: scale(1.1);
         }
-        
-        .footer-bottom {
+
+        /* Seção Fatos */
+        .fatos {
+            padding: 80px 0;
+            background-color: #fff;
+        }
+
+        .fatos-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .fatos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .fato-card {
+            background-color: var(--light-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fato-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .fato-icon {
+            width: 100%;
+            padding: 30px 0;
+            background-color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fato-icon i {
+            font-size: 3rem;
+            color: var(--text-light);
+        }
+
+        .fato-content {
+            padding: 20px;
             text-align: center;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        /* Animações e responsividade */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        .fato-content h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: var(--primary-color);
         }
-        
+
+        .fato-content p {
+            color: var(--text-dark);
+            margin-bottom: 0;
+        }
+
+        .counter-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .counter-item {
+            text-align: center;
+            margin: 15px;
+        }
+
+        .counter {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+
+        .counter-text {
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        /* Animações */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
-        /* Media queries para responsividade */
-        @media (max-width: 991px) {
-            header {
-                padding: 15px 3%;
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
             }
-            
-            .logo-text {
-                display: none;
-            }
-            
-            nav ul {
-                gap: 15px;
+            to {
+                opacity: 1;
             }
         }
-        
+
+        /* Responsivo */
         @media (max-width: 768px) {
-            .banner h1 {
+            .hero-content h1 {
                 font-size: 2.5rem;
             }
             
-            nav {
-                position: fixed;
-                top: 80px;
-                left: -100%;
-                width: 80%;
-                height: calc(100vh - 80px);
-                background-color: white;
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 40px 20px;
-                transition: all 0.4s ease;
-                box-shadow: var(--shadow);
+            .hero-content p {
+                font-size: 1.1rem;
             }
             
-            nav.active {
-                left: 0;
-            }
-            
-            nav ul {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            nav ul li {
-                margin-bottom: 20px;
-            }
-            
-            .hamburger {
-                display: block;
-                cursor: pointer;
-                z-index: 1001;
-            }
-            
-            .search-box {
-                width: 100%;
-                margin: 20px 0;
-            }
-            
-            .search-box input {
-                width: 100%;
-            }
-            
-            .auth-buttons {
-                margin-left: 0;
-                width: 100%;
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .btn-login, .btn-register {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .destinos-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .banner h1 {
+            .section-header h2 {
                 font-size: 2rem;
             }
             
-            .banner p {
+            .maravilhas-grid, .destinos-grid, .fatos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .recente-card {
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-content p {
                 font-size: 1rem;
             }
             
-            .banner .btn {
-                padding: 12px 25px;
-                font-size: 1rem;
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .recentes-nav {
+                display: none;
             }
         }
     </style>
@@ -842,7 +1085,7 @@ $usuarioLogado = isset($_SESSION['usuario']) && isset($_SESSION['usuario']['nome
 <body>
     <header>
         <div class="logo">
-            <img src="../assets/images/logo.png" alt="Logo da Aplicação" />
+            <img src="../assets/images/logo_.PNG" alt="Logo da Aplicação" />
             <div class="logo-text">Destinos Angola</div>
         </div>
         
@@ -910,246 +1153,345 @@ $usuarioLogado = isset($_SESSION['usuario']) && isset($_SESSION['usuario']['nome
         </div>
     </header>
 
-    <section class="banner">
-        <h1>Descubra a Magia de Angola</h1>
-        <p>Venha conhecer as paisagens deslumbrantes, a cultura vibrante e a história fascinante de um dos mais belos países da África.</p>
-        <a href="#destinos" class="btn"><i class="fas fa-compass"></i> Explore Nossos Destinos</a>
-    </section>
-
-    <section class="carousel">
-        <h2>Destinos Populares</h2>
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <img src="../assets/images/tundavala.jpg" alt="Fenda da Tundavala" />
-                <h2>Fenda da Tundavala</h2>
-            </div>
-            <div class="carousel-item">
-                <img src="../assets/images/maiombe.jpg" alt="Floresta do Mayombe" />
-                <h2>Floresta do Mayombe</h2>
-            </div>
-            <div class="carousel-item">
-                <img src="../assets/images/moco.jpg" alt="Morro do Môco" />
-                <h2>Morro do Môco</h2>
-            </div>
-            <div class="carousel-item">
-                <img src="../assets/images/nzenzo.jpg" alt="Grutas do Nzenzo" />
-                <h2>Grutas do Nzenzo</h2>
-            </div>
-            <div class="carousel-item">
-                <img src="../assets/images/carumbo.jpg" alt="Lagoa Carumbo" />
-                <h2>Lagoa Carumbo</h2>
-            </div>
-            <div class="carousel-item">
-                <img src="../assets/images/calandula.jpg" alt="Quedas de Kalandula" />
-                <h2>Quedas de Kalandula</h2>
-            </div>
-            <div class="carousel-item">
-                <img src="../assets/images/chiumbe.jpg" alt="Quedas do Rio Chiumbe" />
-                <h2>Quedas do Rio Chiumbe</h2>
-            </div>
+    <!-- Hero Banner com Carrossel de Imagens -->
+    <section class="hero-banner">
+        <div class="hero-slider">
+             <div class="hero-slide active" style="background-image: url('../assets/images/banner1.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner2.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner3.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner5.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner6.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner8.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner4.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('../assets/images/banner7.webp');"></div>
         </div>
-        <div class="carousel-controls">
-            <button onclick="scrollCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
-            <button onclick="scrollCarousel(1)"><i class="fas fa-chevron-right"></i></button>
+        <div class="hero-content">
+            <h1>Descubra a Magia de Angola</h1>
+            <p>Venha conhecer as paisagens deslumbrantes, a cultura vibrante e a história fascinante de um dos mais belos países da África.</p>
+            <a href="listar_destino.php" class="hero-btn"><i class="fas fa-compass"></i> Explore Nossos Destinos</a>
         </div>
     </section>
 
-    <section id="destinos" class="destinos">
-        <h2>Destinos em Destaque</h2>
-        <div class="destinos-grid">
-        <div class="destino-card">
-                <span class="badge">Mais Visitado</span>
-                <img src="../assets/images/tundavala.jpg" alt="Fenda da Tundavala">
-                <div class="destino-content">
-                    <h3>Fenda da Tundavala</h3>
-                    <p>Um impressionante precipício natural localizado na província de Huíla. Com mais de 1000 metros de altura, oferece uma vista deslumbrante da planície abaixo.</p>
-                    <a href="listar_destino.php?id=1" class="btn">Saiba Mais</a>
-                </div>
-            </div>
-            
-            <div class="destino-card">
-                <img src="../assets/images/calandula.jpg" alt="Quedas de Kalandula">
-                <div class="destino-content">
-                    <h3>Quedas de Kalandula</h3>
-                    <p>Uma das maiores quedas d'água da África, com 105 metros de altura e 400 metros de largura. Um espetáculo natural localizado na província de Malanje.</p>
-                    <a href="listar_destino.php?id=2" class="btn">Saiba Mais</a>
-                </div>
-            </div>
-            
-            <div class="destino-card">
-                <span class="badge">Popular</span>
-                <img src="../assets/images/carumbo.jpg" alt="Lagoa Carumbo">
-                <div class="destino-content">
-                    <h3>Lagoa Carumbo</h3>
-                    <p>Localizada na província da Lunda Norte, é um magnífico espelho d'água rodeado por uma rica diversidade de fauna e flora.</p>
-                    <a href="listar_destino.php?id=3" class="btn">Saiba Mais</a>
-                </div>
-            </div>
-            
-            <div class="destino-card">
-                <img src="../assets/images/maiombe.jpg" alt="Floresta do Mayombe">
-                <div class="destino-content">
-                    <h3>Floresta do Mayombe</h3>
-                    <p>Uma floresta tropical densa localizada em Cabinda. Lar de uma impressionante biodiversidade, incluindo espécies raras de plantas e animais.</p>
-                    <a href="listar_destino.php?id=4" class="btn">Saiba Mais</a>
-                </div>
-            </div>
-            
-            <div class="destino-card">
-                <img src="../assets/images/moco.jpg" alt="Morro do Môco">
-                <div class="destino-content">
-                    <h3>Morro do Môco</h3>
-                    <p>O ponto mais alto de Angola, com 2.620 metros de altitude. Localizado na província do Huambo, oferece trilhas desafiadoras e vistas panorâmicas.</p>
-                    <a href="listar_destino.php?id=5" class="btn">Saiba Mais</a>
-                </div>
-            </div>
-            
-            <div class="destino-card">
-                <span class="badge">Recomendado</span>
-                <img src="../assets/images/nzenzo.jpg" alt="Grutas do Nzenzo">
-                <div class="destino-content">
-                    <h3>Grutas do Nzenzo</h3>
-                    <p>Um complexo de cavernas subterrâneas na província do Uíge. Formações rochosas impressionantes e um rio subterrâneo fazem deste lugar uma experiência única.</p>
-                    <a href="listar_destino.php?id=6" class="btn">Saiba Mais</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="fatos" class="fatos">
-        <h2>Fatos Interessantes sobre Angola</h2>
-        <div class="fatos-carousel">
-            <div class="fato-item active">
-                <img src="../assets/images/cultura-angola.jpg" alt="Cultura Angolana">
-                <h3>Rica Herança Cultural</h3>
-                <p>Angola é lar de mais de 90 grupos étnicos diferentes, cada um com suas próprias tradições, línguas e expressões culturais. A dança e a música, especialmente o Semba (precursor da Samba brasileira), são parte integrante da identidade cultural angolana.</p>
-            </div>
-            <div class="fato-item">
-                <img src="../assets/images/diamantes-angola.jpg" alt="Diamantes de Angola">
-                <h3>Riquezas Naturais</h3>
-                <p>Angola é um dos maiores produtores de diamantes do mundo e possui vastas reservas de petróleo. O país também é rico em outros recursos naturais como ouro, ferro, cobre e muito mais.</p>
-            </div>
-            <div class="fato-item">
-                <img src="../assets/images/biodiversidade-angola.jpg" alt="Biodiversidade de Angola">
-                <h3>Incrível Biodiversidade</h3>
-                <p>O país abriga seis principais biomas e é considerado um dos hotspots de biodiversidade da África. A Palanca Negra Gigante, símbolo nacional, é uma espécie de antílope encontrada apenas em Angola.</p>
-            </div>
-        </div>
-        <div class="fatos-buttons">
-            <button class="btn" onclick="navegarFatos(-1)"><i class="fas fa-arrow-left"></i> Anterior</button>
-            <button class="btn" onclick="navegarFatos(1)">Próximo <i class="fas fa-arrow-right"></i></button>
-        </div>
-    </section>
-
-    <section id="sobre" class="sobre">
-        <h2>Sobre Nós</h2>
-        <p>Somos uma plataforma dedicada a promover o turismo em Angola, destacando os locais mais bonitos e interessantes deste país incrível. Nossa missão é conectar viajantes a experiências autênticas, contribuindo para o desenvolvimento sustentável do turismo angolano e ajudando a preservar o patrimônio natural e cultural do país.</p>
-        <p>Todas as informações que compartilhamos são cuidadosamente pesquisadas e atualizadas regularmente. Acreditamos no potencial turístico de Angola e estamos comprometidos em apresentar o melhor que este país tem a oferecer para o mundo.</p>
-    </section>
-
-    <footer>
-        <div class="footer-content">
-            <div class="footer-column">
-                <h3>Destinos Angola</h3>
-                <p>Descubra as maravilhas naturais, a rica cultura e a história fascinante de Angola com a nossa plataforma dedicada ao turismo responsável e sustentável.</p>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
-                </div>
-            </div>
-            
-            <div class="footer-column">
-                <h3>Links Rápidos</h3>
-                <ul>
-                    <li><a href="#destinos">Destinos</a></li>
-                    <li><a href="#fatos">Fatos Interessantes</a></li>
-                    <li><a href="#sobre">Sobre Nós</a></li>
-                    <li><a href="contato.php">Contato</a></li>
-                    <li><a href="termos.php">Termos de Uso</a></li>
-                    <li><a href="privacidade.php">Política de Privacidade</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-column">
-                <h3>Contate-nos</h3>
-                <p><i class="fas fa-map-marker-alt"></i> Luanda, Angola</p>
-                <p><i class="fas fa-phone"></i> +244 923 456 789</p>
-                <p><i class="fas fa-envelope"></i> info@destinosangola.co.ao</p>
-            </div>
-            
-            <div class="footer-column">
-                <h3>Newsletter</h3>
-                <p>Inscreva-se para receber as últimas novidades sobre destinos turísticos em Angola.</p>
-                <form action="newsletter.php" method="POST" class="newsletter-form">
-                    <input type="email" name="email" placeholder="Seu e-mail" required>
-                    <button type="submit" class="btn">Inscrever-se</button>
-                </form>
-            </div>
+    <!-- Seção 7 Maravilhas de Angola -->
+    <section id="maravilhas" class="maravilhas">
+        <div class="section-header">
+            <h2>O Melhor de Angola</h2>
+            <p>Conheça as 7 Maravilhas Naturais de Angola, locais deslumbrantes que representam a incrível diversidade e beleza do país.</p>
         </div>
         
-        <div class="footer-bottom">
-            <p>&copy; <?php echo date('Y'); ?> Destinos Angola. Todos os direitos reservados.</p>
+        <div class="maravilhas-grid">
+            <?php
+            if ($resultado_maravilhas->num_rows > 0) {
+                while($maravilha = $resultado_maravilhas->fetch_assoc()) {
+                    $imagem = !empty($maravilha['imagem']) ? '../assets/images/' . $maravilha['imagem'] : '../assets/images/imagem_padrao.jpg';
+                    ?>
+                    <div class="maravilha-card" onclick="window.location.href='detalhes_destino.php?id=<?= $maravilha['id'] ?>'">
+                        <span class="maravilha-badge">Maravilha Natural</span>
+                        <div class="maravilha-img">
+                            <img src="<?= $imagem ?>" alt="<?= htmlspecialchars($maravilha['nome_destino']) ?>">
+                        </div>
+                        <div class="maravilha-content">
+                            <h3><?= htmlspecialchars($maravilha['nome_destino']) ?></h3>
+                            <p><?= encurtarTexto($maravilha['descricao']) ?></p>
+                            <div class="maravilha-footer">
+                                <div class="maravilha-location">
+                                    <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($maravilha['localizacao']) ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                }
+            } else {
+                echo "<p class='no-results'>Nenhuma maravilha encontrada.</p>";
+            }
+            ?>
+        </div>
+        
+        <div class="view-all-container">
+            <a href="listar_destino.php?maravilhas=1" class="btn-view-all">
+                Ver Todas Maravilhas <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Seção Destinos Angola -->
+    <section id="destinos" class="destinos">
+        <div class="section-header">
+            <h2>Destinos Angola</h2>
+            <p>Explore os mais belos e fascinantes destinos turísticos espalhados por todo o território angolano.</p>
+        </div>
+        
+        <div class="destinos-grid">
+            <?php
+            if ($resultado_destinos->num_rows > 0) {
+                while($destino = $resultado_destinos->fetch_assoc()) {
+                    $imagem = !empty($destino['imagem']) ? '../assets/images/' . $destino['imagem'] : '../assets/images/imagem_padrao.jpg';
+                    ?>
+                    <div class="destino-card" onclick="window.location.href='detalhes_destino.php?id=<?= $destino['id'] ?>'">
+                        <div class="destino-img">
+                            <img src="<?= $imagem ?>" alt="<?= htmlspecialchars($destino['nome_destino']) ?>">
+                        </div>
+                        <div class="destino-content">
+                            <h3><?= htmlspecialchars($destino['nome_destino']) ?></h3>
+                            <p><?= encurtarTexto($destino['descricao']) ?></p>
+                            <div class="destino-footer">
+                                <div class="destino-location">
+                                    <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($destino['localizacao']) ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                }
+            } else {
+                echo "<p class='no-results'>Nenhum destino encontrado.</p>";
+            }
+            ?>
+        </div>
+        
+        <div class="view-all-container">
+            <a href="listar_destino.php" class="btn-view-all">
+                Ver Todos Destinos <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Seção Adicionados Recentemente -->
+    <section id="recentes" class="recentes">
+        <div class="section-header">
+            <h2>Adicionados Recentemente</h2>
+            <p>Descubra os mais novos destinos turísticos adicionados à nossa plataforma.</p>
+        </div>
+        
+        <div class="recentes-container">
+            <div class="recentes-slider">
+                <?php
+                if ($resultado_recentes->num_rows > 0) {
+                    while($recente = $resultado_recentes->fetch_assoc()) {
+                        $imagem = !empty($recente['imagem']) ? '../assets/images/' . $recente['imagem'] : '../assets/images/imagem_padrao.jpg';
+?>
+<div class="recente-card" onclick="window.location.href='detalhes_destino.php?id=<?= $recente['id'] ?>'">
+    <span class="recente-badge">Novo</span>
+    <div class="recente-img">
+        <img src="<?= $imagem ?>" alt="<?= htmlspecialchars($recente['nome_destino']) ?>">
+    </div>
+    <div class="recente-content">
+        <h3><?= htmlspecialchars($recente['nome_destino']) ?></h3>
+        <p><?= encurtarTexto($recente['descricao']) ?></p>
+        <div class="recente-date">
+            <i class="far fa-calendar-alt"></i> Adicionado em: <?= formatarData($recente['data_cadastro']) ?>
+        </div>
+    </div>
+</div>
+<?php
+                    }
+                } else {
+                    echo "<p class='no-results'>Nenhum destino recente encontrado.</p>";
+                }
+?>
+            </div>
+            <div class="recentes-nav">
+                <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
+                <button class="next-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção de Fatos e Estatísticas -->
+    <section id="fatos" class="fatos">
+        <div class="section-header">
+            <h2>Fatos Sobre Angola</h2>
+            <p>Conheça alguns dados interessantes sobre este incrível país africano.</p>
+        </div>
+        
+        <div class="fatos-container">
+            <div class="fatos-grid">
+                <div class="fato-card">
+                    <div class="fato-icon">
+                        <i class="fas fa-globe-africa"></i>
+                    </div>
+                    <div class="fato-content">
+                        <h3>Território Vasto</h3>
+                        <p>Angola é o sétimo maior país da África, com uma área de mais de 1.246.700 km².</p>
+                    </div>
+                </div>
+                
+                <div class="fato-card">
+                    <div class="fato-icon">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <div class="fato-content">
+                        <h3>Biodiversidade</h3>
+                        <p>O país abriga seis diferentes biomas terrestres, que vão desde desertos até florestas tropicais.</p>
+                    </div>
+                </div>
+                
+                <div class="fato-card">
+                    <div class="fato-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="fato-content">
+                        <h3>Cultural</h3>
+                        <p>Angola possui mais de 90 grupos etnolinguísticos diferentes, cada um com suas próprias tradições.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="counter-container">
+                <div class="counter-item">
+                    <div class="counter" data-target="18">0</div>
+                    <div class="counter-text">Províncias</div>
+                </div>
+                
+                <div class="counter-item">
+                    <div class="counter" data-target="1600">0</div>
+                    <div class="counter-text">Km de Litoral</div>
+                </div>
+                
+                <div class="counter-item">
+                    <div class="counter" data-target="2619">0</div>
+                    <div class="counter-text">Metros (Ponto mais alto)</div>
+                </div>
+                
+                <div class="counter-item">
+                    <div class="counter" data-target="70">0</div>
+                    <div class="counter-text">Destinos Turísticos Principais</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção Sobre Nós -->
+    <section id="sobre" class="sobre">
+        <div class="section-header">
+            <h2>Sobre Nós</h2>
+            <p>Conheça mais sobre a nossa missão de promover o turismo em Angola.</p>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="#destinos">Destinos</a></li>
+                        <li><a href="#maravilhas">7 Maravilhas</a></li>
+                        <li><a href="#fatos">Fatos Sobre Angola</a></li>
+                        <li><a href="#sobre">Sobre Nós</a></li>
+                        <li><a href="contato.php">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contato</h3>
+                    <address>
+                        <p><i class="fas fa-map-marker-alt"></i> Luanda, Angola</p>
+                        <p><i class="fas fa-phone"></i> +244 941227898</p>
+                        <p><i class="fas fa-envelope"></i> info@destinosangola.co.ao</p>
+                    </address>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; <?= date('Y') ?> Destinos Angola. Todos os direitos reservados.</p>
+                <div class="footer-links">
+                    <a href="termos.php">Termos de Uso</a>
+                    <a href="privacidade.php">Política de Privacidade</a>
+                </div>
+            </div>
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
-        // Funcionalidade para o carrossel de imagens
-        function scrollCarousel(direction) {
-            const carousel = document.querySelector('.carousel-inner');
-            const itemWidth = document.querySelector('.carousel-item').offsetWidth + 25; // item width + gap
-            carousel.scrollBy({ left: itemWidth * direction, behavior: 'smooth' });
-        }
-        
-        // Funcionalidade para a navegação de fatos interessantes
-        let currentFactIndex = 0;
-        const facts = document.querySelectorAll('.fato-item');
-        
-        function showFact(index) {
-            facts.forEach(fact => fact.classList.remove('active'));
+        // Script para o carrossel de imagens do hero banner
+        $(document).ready(function() {
+            // Configuração do carrossel de imagens do hero banner
+            let currentSlide = 0;
+            const slides = $('.hero-slide');
+            const slideCount = slides.length;
             
-            currentFactIndex = (index + facts.length) % facts.length;
-            facts[currentFactIndex].classList.add('active');
-        }
-        
-        function navegarFatos(direction) {
-            showFact(currentFactIndex + direction);
-        }
-        
-        // Menu hambúrguer para mobile
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburger = document.querySelector('.hamburger');
-            const nav = document.querySelector('nav');
+            function nextSlide() {
+                slides.eq(currentSlide).removeClass('active');
+                currentSlide = (currentSlide + 1) % slideCount;
+                slides.eq(currentSlide).addClass('active');
+            }
             
-            hamburger.addEventListener('click', function() {
-                nav.classList.toggle('active');
-                
-                // Alterna o ícone do hambúrguer
-                const icon = hamburger.querySelector('i');
-                if (icon.classList.contains('fa-bars')) {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-times');
-                } else {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
+            // Muda o slide a cada 5 segundos
+            setInterval(nextSlide, 5000);
+            
+            // Controles de navegação para o slider de destinos recentes
+            $('.next-btn').click(function() {
+                $('.recentes-slider').animate({
+                    scrollLeft: "+=350"
+                }, 300);
             });
             
-            // Adiciona estilos de hover para destinos
-            const destinoCards = document.querySelectorAll('.destino-card');
-            destinoCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-10px)';
-                    this.style.boxShadow = 'var(--hover-shadow)';
+            $('.prev-btn').click(function() {
+                $('.recentes-slider').animate({
+                    scrollLeft: "-=350"
+                }, 300);
+            });
+            
+            // Animação para os contadores
+            function animateCounter() {
+                $('.counter').each(function() {
+                    const $this = $(this);
+                    const target = parseInt($this.attr('data-target'));
+                    
+                    // Verifica se o contador está visível na tela
+                    const isInViewport = function(elem) {
+                        const bounding = elem.getBoundingClientRect();
+                        return (
+                            bounding.top >= 0 &&
+                            bounding.left >= 0 &&
+                            bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                            bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
+                        );
+                    };
+                    
+                    if (isInViewport(this) && !$this.hasClass('animated')) {
+                        $this.addClass('animated');
+                        $({ Counter: 0 }).animate({
+                            Counter: target
+                        }, {
+                            duration: 2000,
+                            easing: 'swing',
+                            step: function() {
+                                $this.text(Math.ceil(this.Counter));
+                            },
+                            complete: function() {
+                                $this.text(target);
+                            }
+                        });
+                    }
                 });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                    this.style.boxShadow = 'var(--shadow)';
-                });
+            }
+            
+            // Verifica quando a seção de contadores entra na viewport
+            $(window).scroll(function() {
+                animateCounter();
+            });
+            
+            // Executa quando a página carrega também
+            animateCounter();
+            
+            // Controle do menu mobile
+            $('.hamburger').click(function() {
+                $('nav').toggleClass('active');
+                $(this).toggleClass('active');
+            });
+            
+            // Fechar menu ao clicar em um link (versão mobile)
+            $('nav a').click(function() {
+                if ($(window).width() <= 768) {
+                    $('nav').removeClass('active');
+                    $('.hamburger').removeClass('active');
+                }
             });
         });
     </script>
 </body>
 </html>
+<?php
+$conexao->close();
+?>

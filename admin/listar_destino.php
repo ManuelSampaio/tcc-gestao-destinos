@@ -15,6 +15,7 @@ try {
 
     // Obter os destinos existentes
     $destinos = $destinoModel->obterDestinos();
+    $categorias = $destinoModel->obterCategorias();
 } catch (Exception $e) {
     die("Erro ao carregar os dados: " . htmlspecialchars($e->getMessage()));
 }
@@ -25,78 +26,84 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Destinos Turísticos de Angola</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/stylekk.css">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
+        :root {
+            --primary-color: #004d40;
+            --secondary-color: #ff9800;
+            --accent-color: #f44336;
+            --light-bg: #f5f5f5;
+            --dark-bg: #212121;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s ease;
+            --border-radius: 8px;
         }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
         .header {
-            background-color: #1e90ff;
-            color: white;
+            background-color: var(--primary-color);
+            color: var(--text-light);
             text-align: center;
-            padding: 2rem 0;
+            padding: 60px 20px;
             position: relative;
-            background-image: linear-gradient(135deg, #1e90ff, #4682b4);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
+            background-image: linear-gradient(rgba(0, 77, 64, 0.9), rgba(0, 77, 64, 0.8)), url('../assets/images/banner1.jpg');
+            background-size: cover;
+            background-position: center;
         }
 
         .header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            animation: fadeInUp 1s ease;
+            font-weight: 700;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
             font-size: 1.2rem;
-            margin-top: 0.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 1.3s ease;
+            opacity: 0.9;
         }
 
-        /* Botão Voltar Fixo */
-        .back-button-fixed {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background-color: #1e90ff;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            opacity: 0.8;
-        }
-
-        .back-button-fixed:hover {
-            background-color: #4682b4;
-            transform: scale(1.1);
-            opacity: 1;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .back-button-fixed i {
-            font-size: 1.2rem;
-        }
-
-        .search-filter {
+        /* Main content */
+        main {
             max-width: 1200px;
-            margin: 1.5rem auto;
-            padding: 0 1rem;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Search and Filter */
+        .search-filter {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
             flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: space-between;
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            animation: fadeInUp 1s ease;
         }
 
         .search-box, .filter-box {
@@ -107,105 +114,102 @@ try {
 
         .search-box i, .filter-box i {
             position: absolute;
-            left: 10px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #999;
+            color: var(--primary-color);
+            font-size: 1.1rem;
         }
 
-        .search-filter input, .search-filter select {
-            padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-            font-size: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 30px;
+        .search-box input, .filter-box select {
             width: 100%;
-            box-sizing: border-box;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            color: var(--text-dark);
+            background-color: white;
+            transition: var(--transition);
+            font-size: 1rem;
         }
 
-        .search-filter input:focus, .search-filter select:focus {
+        .search-box input:focus, .filter-box select:focus {
             outline: none;
-            border-color: #1e90ff;
-            box-shadow: 0 2px 10px rgba(30, 144, 255, 0.2);
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
         }
 
+        /* Result Counter */
+        .result-counter {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            animation: fadeIn 1.5s ease;
+        }
+
+        /* Destinos Container */
         .destinos-container {
-            max-width: 1200px;
-            margin: 2rem auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-            padding: 0 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
         }
 
+        /* Destino Card */
         .destino-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            background-color: white;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
             display: flex;
             flex-direction: column;
-            height: 550px; /* Altura fixa para todos os cards */
-            border: 2px solid transparent; /* Borda transparente por padrão */
-            position: relative; /* Para posicionar a categoria */
+            height: 100%;
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
         }
 
         .destino-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
-            border-color: #1e90ff; /* Borda azul ao passar o mouse */
+            box-shadow: var(--hover-shadow);
         }
 
         .destino-card a {
             text-decoration: none;
-            color: inherit;
-            display: block;
-            height: 100%;
+            color: var(--text-dark);
             display: flex;
             flex-direction: column;
-        }
-
-        .destino-card .categoria-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background-color: rgba(30, 144, 255, 0.9);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            z-index: 10;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            height: 100%;
         }
 
         .imagem-container {
             position: relative;
-            height: 250px;
+            height: 200px;
             overflow: hidden;
         }
 
-        .destino-card img {
+        .imagem-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.8s ease, filter 0.5s ease;
+            transition: transform 0.5s ease;
         }
 
-        .destino-card:hover img {
-            transform: scale(1.05);
-            filter: brightness(1.1) saturate(1.2); /* Aumenta brilho e saturação ao passar o mouse */
+        .destino-card:hover .imagem-container img {
+            transform: scale(1.1);
         }
 
         .card-click-indicator {
             position: absolute;
             bottom: 15px;
             right: 15px;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: var(--secondary-color);
+            color: white;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -213,188 +217,165 @@ try {
             justify-content: center;
             align-items: center;
             opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-click-indicator i {
-            color: #1e90ff;
-            font-size: 1.2rem;
+            transform: translateY(20px);
+            transition: var(--transition);
         }
 
         .destino-card:hover .card-click-indicator {
             opacity: 1;
-            transform: scale(1.1);
+            transform: translateY(0);
+        }
+
+        .categoria-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--secondary-color);
+            color: var(--text-dark);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1;
+            box-shadow: var(--shadow);
         }
 
         .destino-card-content {
-            padding: 1.5rem;
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            padding: 20px;
+            flex-grow: 1;
         }
 
         .destino-card-content h3 {
-            font-size: 1.5rem;
-            margin: 0 0 0.8rem;
-            color: #1e90ff;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 0.8rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
         }
 
         .destino-card-content p {
-            margin: 0;
+            color: #666;
             font-size: 0.95rem;
-            color: #555;
+            margin-bottom: 15px;
             display: -webkit-box;
-            -webkit-line-clamp: 6; /* Limita a 6 linhas */
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis; /* Adiciona "..." ao final do texto truncado */
-            line-height: 1.6;
         }
 
         .destino-card-footer {
-            margin-top: auto;
-            padding: 1rem 1.5rem;
-            background: linear-gradient(to right, #f5f5f5, #e0f0ff);
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background-color 0.3s ease;
-            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.9rem;
         }
 
-        .destino-card-footer .localizacao {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .destino-card-footer i {
+            color: var(--primary-color);
+            margin-right: 5px;
         }
 
-        .destino-card-footer .localizacao i {
-            color: #1e90ff;
-        }
-
-        .destino-card:hover .destino-card-footer {
-            background: linear-gradient(to right, #e0f0ff, #c9e3ff);
+        .destino-card-footer span:last-child {
+            color: var(--secondary-color);
+            font-weight: 500;
         }
 
         .empty-message {
             text-align: center;
-            font-size: 1.2rem;
-            color: #999;
-            padding: 3rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            grid-column: 1 / -1;
-        }
-
-        .footer {
-            text-align: center;
-            background: linear-gradient(135deg, #1e90ff, #4682b4);
-            color: white;
-            padding: 2rem 0;
-            margin-top: 3rem;
-            border-top: 5px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .footer p {
-            margin: 0;
-        }
-
-        /* Removido o botão voltar antigo */
-        /* .back-button {
-            display: inline-block;
-            margin: 1rem auto;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            color: white;
-            background-color: #1e90ff;
-            text-decoration: none;
-            border-radius: 5px;
-            text-align: center;
-            transition: background-color 0.3s ease;
-        }
-
-        .back-button:hover {
-            background-color: #4682b4;
-        } */
-
-        /* Mensagem de contagem de resultados */
-        .result-counter {
-            text-align: center;
-            margin: 1rem auto;
+            padding: 50px 20px;
+            grid-column: 1/-1;
             color: #666;
-            font-size: 0.95rem;
         }
 
-        /* Destaque para destinos populares */
-        .destino-card.popular::before {
-            content: "Popular";
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background-color: #ff6b6b;
+        /* Back Button */
+        .back-button-fixed {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--primary-color);
             color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            z-index: 10;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--hover-shadow);
+            transition: var(--transition);
+            z-index: 100;
         }
 
-        /* Animação de carregamento da página */
+        .back-button-fixed:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
-        .destino-card {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        /* Responsividade para telas muito pequenas */
+        /* Responsive */
         @media (max-width: 768px) {
-            .destinos-container {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                padding: 0 0.8rem;
+            .header h1 {
+                font-size: 2.2rem;
             }
             
+            .search-filter {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .destinos-container {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
             
             .header p {
                 font-size: 1rem;
             }
             
-            .back-button-fixed {
-                bottom: 20px;
-                right: 20px;
-                width: 45px;
-                height: 45px;
-            }
-        }
-
-        @media (max-width: 350px) {
             .destinos-container {
                 grid-template-columns: 1fr;
             }
             
-            .destino-card {
-                height: auto;
-                min-height: 500px;
-            }
-            
-            .search-filter {
-                flex-direction: column;
-            }
-            
-            .search-box, .filter-box {
-                width: 100%;
+            .back-button-fixed {
+                width: 45px;
+                height: 45px;
+                bottom: 20px;
+                right: 20px;
             }
         }
     </style>
@@ -411,16 +392,16 @@ try {
                 <input type="text" id="search" placeholder="Buscar destinos...">
             </div>
             <div class="filter-box">
-                <i class="fas fa-filter"></i>
-                <select id="filter">
-                    <option value="">Todas as Categorias</option>
-                    <option value="praias">Praias</option>
-                    <option value="montanhas">Montanhas</option>
-                    <option value="cidades">Cidades Históricas</option>
-                </select>
-            </div>
-        </div>
-
+    <i class="fas fa-filter"></i>
+    <select id="filter">
+        <option value="">Todas as Categorias</option>
+        <?php foreach ($categorias as $categoria): ?>
+            <option value="<?= htmlspecialchars(strtolower($categoria['nome_categoria'])) ?>">
+                <?= htmlspecialchars($categoria['nome_categoria']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
         <div class="result-counter" id="resultCounter"></div>
 
         <section class="destinos-container">

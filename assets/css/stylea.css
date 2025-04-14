@@ -1,0 +1,86 @@
+/* Estilos para a página de Minhas Avaliações */
+.avaliacoes-container {
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .lista-avaliacoes {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .avaliacao-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+  }
+  
+  .avaliacao-item:last-child {
+    border-bottom: none;
+  }
+  
+  .avaliacao-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .destino-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .destino-nome {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+  
+  .avaliacao-nota {
+    background-color: #f1c40f;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+  
+  .links-navegacao {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .botao-primario, .botao-secundario {
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+  
+  .botao-primario {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .botao-primario:hover {
+    background-color: #2980b9;
+  }
+  
+  .botao-secundario {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+  }
+  
+  .botao-secundario:hover {
+    background-color: #d5dbdb;
+  }
+  
+  /* Classes compartilhadas (se não estiverem já no seu CSS) */
+  .mensagem-vazio {
+    color: #7f8c8d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+  }
