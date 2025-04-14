@@ -1080,6 +1080,275 @@ header .hamburger {
                 display: none;
             }
         }
+/* Estilos para o Footer */
+.site-footer {
+    background-color: var(--primary-color);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 70px 0 20px;
+    position: relative;
+    margin-top: 80px;
+}
+
+.site-footer::before {
+    content: '';
+    position: absolute;
+    top: -25px;
+    left: 0;
+    width: 100%;
+    height: 25px;
+    background-image: linear-gradient(135deg, var(--primary-color) 25%, transparent 25%),
+                     linear-gradient(225deg, var(--primary-color) 25%, transparent 25%);
+    background-size: 50px 50px;
+    background-repeat: repeat-x;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-top {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    margin-bottom: 50px;
+}
+
+.footer-column h3 {
+    color: var(--text-light);
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-column h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background-color: var(--secondary-color);
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.footer-logo img {
+    height: 45px;
+    width: auto;
+    border-radius: 50%;
+}
+
+.footer-logo h3 {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 1.5rem;
+    padding-bottom: 0;
+}
+
+.footer-logo h3::after {
+    display: none;
+}
+
+.footer-about {
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.social-links {
+    display: flex;
+    gap: 12px;
+}
+
+.social-links a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.social-links a:hover {
+    background-color: var(--secondary-color);
+    color: var(--text-dark);
+    transform: translateY(-3px);
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.footer-links a i {
+    margin-right: 8px;
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
+.footer-links a:hover {
+    color: var(--text-light);
+    transform: translateX(5px);
+}
+
+.popular-links a i {
+    font-size: 1rem;
+}
+
+.footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.footer-contact li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.footer-contact li i {
+    color: var(--secondary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.footer-newsletter h4 {
+    color: var(--text-light);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.newsletter-form {
+    display: flex;
+    height: 40px;
+}
+
+.newsletter-form input {
+    flex: 1;
+    padding: 8px 15px;
+    border: none;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.newsletter-form input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.newsletter-form input:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.newsletter-form button {
+    width: 40px;
+    background-color: var(--secondary-color);
+    border: none;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.newsletter-form button:hover {
+    background-color: #ffb74d;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+}
+
+.footer-bottom p {
+    margin: 0;
+}
+
+.footer-bottom-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-bottom-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-bottom-links a:hover {
+    color: var(--secondary-color);
+}
+
+/* Responsividade do Footer */
+@media (max-width: 768px) {
+    .footer-top {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .footer-bottom {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-footer {
+        padding: 50px 0 20px;
+    }
+    
+    .footer-logo {
+        justify-content: center;
+    }
+    
+    .footer-column h3 {
+        text-align: center;
+    }
+    
+    .footer-column h3::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .social-links {
+        justify-content: center;
+    }
+    
+    .footer-about {
+        text-align: center;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -1370,36 +1639,71 @@ header .hamburger {
         </div>
     </section>
     <!-- Footer -->
-    <footer>
-                <div class="footer-column">
-                    <h3>Links Rápidos</h3>
-                    <ul>
-                        <li><a href="#destinos">Destinos</a></li>
-                        <li><a href="#maravilhas">7 Maravilhas</a></li>
-                        <li><a href="#fatos">Fatos Sobre Angola</a></li>
-                        <li><a href="#sobre">Sobre Nós</a></li>
-                        <li><a href="contato.php">Contato</a></li>
-                    </ul>
+<footer class="site-footer">
+    <div class="footer-container">
+        <div class="footer-top">
+            <div class="footer-column">
+                <div class="footer-logo">
+                    <img src="../assets/images/logo_.PNG" alt="Logo Destinos Angola">
+                    <h3>Destinos Angola</h3>
                 </div>
-                <div class="footer-column">
-                    <h3>Contato</h3>
-                    <address>
-                        <p><i class="fas fa-map-marker-alt"></i> Luanda, Angola</p>
-                        <p><i class="fas fa-phone"></i> +244 941227898</p>
-                        <p><i class="fas fa-envelope"></i> info@destinosangola.co.ao</p>
-                    </address>
+                <p class="footer-about">Sua porta de entrada para descobrir as belezas naturais, a cultura vibrante e os destinos fascinantes de Angola.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
             
-            <div class="footer-bottom">
-                <p>&copy; <?= date('Y') ?> Destinos Angola. Todos os direitos reservados.</p>
-                <div class="footer-links">
-                    <a href="termos.php">Termos de Uso</a>
-                    <a href="privacidade.php">Política de Privacidade</a>
+            <div class="footer-column">
+                <h3>Links Rápidos</h3>
+                <ul class="footer-links">
+                    <li><a href="#maravilhas"><i class="fas fa-chevron-right"></i> 7 Maravilhas</a></li>
+                    <li><a href="#destinos"><i class="fas fa-chevron-right"></i> Destinos</a></li>
+                    <li><a href="#recentes"><i class="fas fa-chevron-right"></i> Novidades</a></li>
+                    <li><a href="#fatos"><i class="fas fa-chevron-right"></i> Fatos Sobre Angola</a></li>
+                    <li><a href="#sobre"><i class="fas fa-chevron-right"></i> Sobre Nós</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Destinos Populares</h3>
+                <ul class="footer-links popular-links">
+                    <li><a href="#"><i class="fas fa-map-marker-alt"></i> Parque Nacional da Kissama</a></li>
+                    <li><a href="#"><i class="fas fa-map-marker-alt"></i> Quedas de Kalandula</a></li>
+                    <li><a href="#"><i class="fas fa-map-marker-alt"></i> Baía Azul</a></li>
+                    <li><a href="#"><i class="fas fa-map-marker-alt"></i> Serra da Leba</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Contato</h3>
+                <ul class="footer-contact">
+                    <li><i class="fas fa-map-marker-alt"></i> Luanda, Angola</li>
+                    <li><i class="fas fa-phone"></i> +244 941 227 898</li>
+                    <li><i class="fas fa-envelope"></i> info@destinosangola.co.ao</li>
+                </ul>
+                <div class="footer-newsletter">
+                    <h4>Receba Novidades</h4>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Seu e-mail">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
                 </div>
             </div>
         </div>
-    </footer>
+        
+        <div class="footer-bottom">
+            <p>&copy; <?= date('Y') ?> Destinos Angola. Todos os direitos reservados.</p>
+            <div class="footer-bottom-links">
+                <a href="termos.php">Termos de Uso</a>
+                <a href="privacidade.php">Política de Privacidade</a>
+                <a href="contato.php">Contato</a>
+            </div>
+        </div>
+    </div>
+</footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
