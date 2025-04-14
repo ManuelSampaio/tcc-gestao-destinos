@@ -16,12 +16,30 @@ if (!isset($_SESSION['usuario']) ||
 }
 
 $tipoUsuario = $_SESSION['usuario']['tipo_usuario'];
-
 $usuarioController = new UsuarioController();
 $usuarioLogado = $_SESSION['usuario'];
 
 // Mensagem de feedback
 $message = "";
+$alertType = "info";
+
+// Exclusão de usuário
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['excluir_usuario'])) {
+    $idUsuario = (int)$_POST['id_usuario'];
+    
+    try {
+        if ($usuarioController->removerUsuario($idUsuario)) {
+            $message = "Usuário excluído com sucesso!";
+            $alertType = "success";
+        } else {
+            $message = "Erro ao excluir usuário.";
+            $alertType = "danger";
+        }
+    } catch (Exception $e) {
+        $message = $e->getMessage();
+        $alertType = "danger";
+    }
+}
 
 // Cadastro de novo usuário
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cadastrar_usuario'])) {
@@ -32,63 +50,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cadastrar_usuario']))
 
     if (empty($nome) || empty($email) || empty($senha) || empty($tipo_usuario)) {
         $message = "Por favor, preencha todos os campos.";
+        $alertType = "warning";
     } else {
-        $senhaCriptografada = password_hash($senha, PASSWORD_DEFAULT);
         $dadosUsuario = [
             'nome' => $nome,
             'email' => $email,
-            'senha' => $senhaCriptografada,
+            'senha' => $senha,
             'tipo_usuario' => $tipo_usuario
         ];
 
         if ($usuarioController->adicionarUsuario($dadosUsuario)) {
             $message = "Usuário cadastrado com sucesso!";
-            header("Location: gerenciar_usuarios.php");
-            exit;
+            $alertType = "success";
         } else {
             $message = "Erro ao cadastrar o usuário.";
+            $alertType = "danger";
         }
     }
 }
 
-// Depuração - verifica estrutura dos dados retornados
-// Lista todos os usuários
-$usuarios = $usuarioController->listarUsuarios();
+// Obter todos os usuários - CORREÇÃO AQUI
+$resultado = $usuarioController->listarUsuarios();
 
-// Verifique se a estrutura dos dados está correta
-if (count($usuarios) > 0 && !empty($usuarios)) {
-    // Se o primeiro item não tiver as chaves esperadas, faça o mapeamento
-    $primeiroUsuario = reset($usuarios);
-    
-    // Verifica se precisamos ajustar as chaves dos dados
-    $precisaAjuste = !isset($primeiroUsuario['nome']) || !isset($primeiroUsuario['email']);
-    
-    // Se precisar de ajuste, vamos mapear as chaves
-    if ($precisaAjuste) {
-        $usuariosAjustados = [];
-        foreach ($usuarios as $usuario) {
-            // Tentar identificar as chaves existentes
-            $novoUsuario = [];
-            
-            // Mapeamento de chaves possíveis
-            $novoUsuario['nome'] = $usuario['nome'] ?? $usuario['user_name'] ?? $usuario['username'] ?? $usuario['name'] ?? 'Nome não disponível';
-            $novoUsuario['email'] = $usuario['email'] ?? $usuario['user_email'] ?? $usuario['mail'] ?? 'Email não disponível';
-            $novoUsuario['tipo_usuario'] = $usuario['tipo_usuario'] ?? $usuario['user_type'] ?? $usuario['role'] ?? $usuario['tipo'] ?? 'comum';
-            
-            $usuariosAjustados[] = $novoUsuario;
-        }
-        $usuarios = $usuariosAjustados;
-    }
+// Extrair usuários e estatísticas corretamente
+if (is_array($resultado) && isset($resultado['usuarios'])) {
+    $usuarios = $resultado['usuarios'];
+    $estatisticas = $resultado['estatisticas'] ?? [
+        'total' => count($usuarios),
+        'admins' => 0,
+        'comuns' => 0
+    ];
+} else {
+    // Fallback caso o retorno não seja o esperado
+    $usuarios = [];
+    $estatisticas = [
+        'total' => 0,
+        'admins' => 0,
+        'comuns' => 0
+    ];
 }
 
-$totalUsuarios = count($usuarios);
-
-// Correção da linha problemática com verificação de existência da chave
-$totalAdmins = count(array_filter($usuarios, function($u) {
-    return isset($u['tipo_usuario']) && ($u['tipo_usuario'] === 'admin' || $u['tipo_usuario'] === 'super_admin');
-}));
-
-$totalUsuariosComuns = $totalUsuarios - $totalAdmins;
+$totalUsuarios = $estatisticas['total'] ?? 0;
+$totalAdmins = ($estatisticas['admins'] ?? 0) + ($estatisticas['super_admins'] ?? 0);
+$totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -128,7 +132,7 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
         .stat-card:hover {
             transform: translateY(-5px);
         }
-        .table-actions button {
+        .table-actions button, .table-actions a {
             margin: 0 2px;
         }
     </style>
@@ -169,7 +173,7 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
         </div>
 
         <?php if (!empty($message)): ?>
-            <div class="alert alert-info alert-dismissible fade show">
+            <div class="alert alert-<?= $alertType ?> alert-dismissible fade show">
                 <?= $message ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -203,6 +207,7 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
                 <table id="usuariosTable" class="table table-striped">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Nome</th>
                             <th>Email</th>
                             <th>Nível de Acesso</th>
@@ -212,6 +217,7 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
                     <tbody>
                         <?php foreach ($usuarios as $usuario): ?>
                             <tr>
+                                <td><?= htmlspecialchars($usuario['id_usuario'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($usuario['nome'] ?? 'Nome não disponível') ?></td>
                                 <td><?= htmlspecialchars($usuario['email'] ?? 'Email não disponível') ?></td>
                                 <td>
@@ -231,7 +237,7 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
                                             $badgeClass = 'bg-danger';
                                             break;
                                         default:
-                                            $tipoExibicao = '';
+                                            $tipoExibicao = 'Usuário Comum';
                                             $badgeClass = 'bg-secondary';
                                     }
                                     ?>
@@ -240,12 +246,19 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
                                     </span>
                                 </td>
                                 <td class="table-actions">
-                                    <button class="btn btn-sm btn-info" title="Editar">
+                                    <a href="editar_usuario.php?id=<?= $usuario['id_usuario'] ?? '' ?>" class="btn btn-sm btn-info" title="Editar">
                                         <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    </a>
+                                    <?php if ($tipoUsuario === 'super_admin' || 
+                                        ($tipoUsuario === 'admin' && ($usuario['tipo_usuario'] ?? '') === 'comum')): ?>
+                                        <form method="post" style="display: inline;" 
+                                              onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                                            <input type="hidden" name="id_usuario" value="<?= $usuario['id_usuario'] ?? '' ?>">
+                                            <button type="submit" name="excluir_usuario" class="btn btn-sm btn-danger" title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -281,11 +294,12 @@ $totalUsuariosComuns = $totalUsuarios - $totalAdmins;
                     <div class="mb-3">
                         <label class="form-label">Tipo de Usuário</label>
                         <select class="form-control" name="tipo_usuario">
-                            <!-- Corrigido para usar os valores do banco de dados -->
-                            <option value="admin">Administrador</option>
                             <option value="comum">Usuário Comum</option>
-                            <?php if (($usuarioLogado['tipo_usuario'] ?? '') === 'super_admin'): ?>
-                            <option value="super_admin">Super Administrador</option>
+                            <?php if (in_array($tipoUsuario, ['admin', 'super_admin'])): ?>
+                                <option value="admin">Administrador</option>
+                            <?php endif; ?>
+                            <?php if ($tipoUsuario === 'super_admin'): ?>
+                                <option value="super_admin">Super Administrador</option>
                             <?php endif; ?>
                         </select>
                     </div>
@@ -313,9 +327,10 @@ $(document).ready(function() {
         pageLength: 10,
         order: [[0, 'asc']],
         columns: [
+            { width: '10%' },
             { width: '25%' },
-            { width: '35%' },
-            { width: '20%' },
+            { width: '30%' },
+            { width: '15%' },
             { width: '20%', orderable: false }
         ]
     });

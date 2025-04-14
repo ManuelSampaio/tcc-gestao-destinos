@@ -16,7 +16,7 @@ $tipoUsuario = $_SESSION['usuario']['tipo_usuario'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Angola Tours - Painel Administrativo</title>
+    <title>Destinos Angola - Painel Administrativo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -237,7 +237,7 @@ $tipoUsuario = $_SESSION['usuario']['tipo_usuario'];
 <body>
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>Angola Tours</h2>
+            <h2>Destinos Angola</h2>
             <p>Painel Administrativo</p>
         </div>
         
