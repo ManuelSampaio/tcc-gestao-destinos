@@ -29,7 +29,7 @@ class DestinoController {
 
     public function obterCoordenadas($destinoId) {
         try {
-            // Corrigida a query com os nomes corretos das colunas
+            // Consulta corrigida para evitar usar d.id_provincia
             $query = "SELECT dt.id, dt.nome_destino, l.nome_local, 
                          p.nome_provincia,
                          l.latitude, l.longitude, l.id_localizacao
@@ -159,50 +159,56 @@ class DestinoController {
             return null;
         }
     }
-
-
-
     
     public function cadastrarDestino($nome, $descricao, $idLocalizacao, $imagem, $idCategoria = null, $isMaravilha = 0) {
         try {
             if (empty($nome) || empty($descricao) || empty($idLocalizacao)) {
                 throw new Exception("Os campos nome, descrição e localização devem ser preenchidos.");
             }
-
+    
             $sqlCheck = "SELECT COUNT(*) FROM destinos_turisticos WHERE nome_destino = :nome";
             $stmtCheck = $this->db->prepare($sqlCheck);
             $stmtCheck->bindParam(':nome', $nome);
             $stmtCheck->execute();
-
+    
             if ($stmtCheck->fetchColumn() > 0) {
                 throw new Exception("Já existe um destino com este nome.");
             }
-
-            $uploadDir = __DIR__ . '/../../uploads/';
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    
             $uploadedFile = null;
-
+            
+            // Se $imagem for um array (objeto de arquivo)
             if (is_array($imagem) && isset($imagem['tmp_name']) && $imagem['tmp_name']) {
+                $uploadDir = __DIR__ . '/../../uploads/';
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
                 $extension = strtolower(pathinfo($imagem['name'], PATHINFO_EXTENSION));
-
+    
                 if (!in_array($extension, $allowedExtensions)) {
                     throw new Exception("Tipo de arquivo inválido. Somente imagens (jpg, jpeg, png, gif) são permitidas.");
                 }
-
+    
                 if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true)) {
                     throw new Exception("Erro ao criar diretório de uploads.");
                 }
-
+    
                 $uniqueFileName = uniqid() . '.' . $extension;
                 $uploadedFile = $uploadDir . $uniqueFileName;
-
+    
                 if (!move_uploaded_file($imagem['tmp_name'], $uploadedFile)) {
                     throw new Exception("Erro ao mover o arquivo para o diretório de uploads.");
                 }
-
+    
                 $uploadedFile = $uniqueFileName;
+            } 
+            // Se $imagem for uma string (caminho já processado)
+            else if(is_string($imagem)) {
+                $uploadedFile = $imagem; // Usa o caminho passado diretamente
             }
-
+            
+            if(!$uploadedFile) {
+                throw new Exception("Imagem inválida ou não fornecida");
+            }
+    
             $sql = "INSERT INTO destinos_turisticos (nome_destino, descricao, imagem, id_localizacao, id_categoria, is_maravilha) 
                     VALUES (:nome, :descricao, :imagem, :id_localizacao, :id_categoria, :is_maravilha)";
             $stmt = $this->db->prepare($sql);
@@ -212,11 +218,11 @@ class DestinoController {
             $stmt->bindParam(':id_localizacao', $idLocalizacao, PDO::PARAM_INT);
             $stmt->bindParam(':id_categoria', $idCategoria, PDO::PARAM_INT);
             $stmt->bindParam(':is_maravilha', $isMaravilha, PDO::PARAM_INT);
-
+    
             if (!$stmt->execute()) {
                 throw new Exception("Erro ao executar a query: " . implode(", ", $stmt->errorInfo()));
             }
-
+    
             return true;
         } catch (Exception $e) {
             $this->handleError("Erro ao cadastrar destino.", $e);
@@ -226,9 +232,11 @@ class DestinoController {
 
     public function listarDestinos() {
         try {
-            $sql = "SELECT dt.*, l.nome_local, l.latitude, l.longitude 
+            // Consulta corrigida para usar a estrutura de tabelas correta
+            $sql = "SELECT dt.*, l.nome_local, l.latitude, l.longitude, p.nome_provincia
                     FROM destinos_turisticos dt
                     LEFT JOIN localizacoes l ON dt.id_localizacao = l.id_localizacao
+                    LEFT JOIN provincias p ON l.id_provincia = p.id_provincia
                     ORDER BY dt.nome_destino ASC";
             $stmt = $this->db->query($sql);
 
@@ -262,10 +270,13 @@ class DestinoController {
     // Método único para obter detalhes de um destino específico
     public function obterDetalhes($id) {
         try {
+            // Consulta corrigida para incluir província
             $query = "SELECT dt.id, dt.nome_destino, dt.descricao, dt.imagem, dt.is_maravilha,
-                             dt.id_categoria, l.nome_local, l.latitude, l.longitude
+                             dt.id_categoria, l.nome_local, l.latitude, l.longitude,
+                             p.nome_provincia
                       FROM destinos_turisticos dt 
                       LEFT JOIN localizacoes l ON dt.id_localizacao = l.id_localizacao
+                      LEFT JOIN provincias p ON l.id_provincia = p.id_provincia
                       WHERE dt.id = :id";
             
             $stmt = $this->db->prepare($query);
@@ -276,6 +287,66 @@ class DestinoController {
         } catch (PDOException $e) {
             error_log("Erro ao obter detalhes do destino: " . $e->getMessage());
             return false;
+        }
+    }
+
+    // NOVO MÉTODO: obterDestinoPorId - Alias para obterDetalhes
+    public function obterDestinoPorId($id) {
+        return $this->obterDetalhes($id);
+    }
+
+    // NOVO MÉTODO: obterDestinoDetalhado - Alias para obterDetalhes
+    public function obterDestinoDetalhado($id) {
+        $db = Database::getConnection();
+        
+        // Consulta SQL com JOINS para todas as tabelas relacionadas
+        $sql = "SELECT d.*, c.nome_categoria, l.nome_local, l.latitude, l.longitude, p.nome_provincia 
+                FROM destinos_turisticos d
+                LEFT JOIN categorias c ON d.id_categoria = c.id_categoria
+                LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao
+                LEFT JOIN provincias p ON l.id_provincia = p.id_provincia
+                WHERE d.id = :id";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // No PDO usamos fetch() e não get_result()
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // NOVO MÉTODO: obterDestinoCompleto - Versão expandida com avaliações e imagens
+    public function obterDestinoCompleto($id) {
+        try {
+            // Obter dados básicos do destino
+            $destino = $this->obterDetalhes($id);
+            
+            if (!$destino) {
+                return null;
+            }
+            
+            // Adicionar avaliações
+            $destino['avaliacoes'] = $this->buscarAvaliacoesPorDestino($id);
+            
+            // Adicionar média de avaliações
+            $destino['media_avaliacoes'] = $this->calcularMediaAvaliacoes($id);
+            
+            // Adicionar imagens adicionais
+            $destino['imagens_adicionais'] = $this->obterImagensDestino($id);
+            
+            // Verificar coordenadas
+            if (empty($destino['latitude']) || empty($destino['longitude'])) {
+                $coordenadas = $this->buscarEArmazenarCoordenadas($id);
+                if ($coordenadas) {
+                    $destino['latitude'] = $coordenadas['latitude'];
+                    $destino['longitude'] = $coordenadas['longitude'];
+                }
+            }
+            
+            return $destino;
+        } catch (Exception $e) {
+            $this->handleError("Erro ao obter destino completo.", $e);
+            return null;
         }
     }
 
@@ -401,7 +472,11 @@ class DestinoController {
 
     public function listarLocalizacoes() {
         try {
-            $sql = "SELECT id_localizacao, nome_local FROM localizacoes ORDER BY nome_local ASC";
+            // Consulta expandida para incluir província na listagem
+            $sql = "SELECT l.id_localizacao, l.nome_local, p.nome_provincia 
+                   FROM localizacoes l
+                   LEFT JOIN provincias p ON l.id_provincia = p.id_provincia
+                   ORDER BY l.nome_local ASC";
             $stmt = $this->db->query($sql);
 
             if (!$stmt) {
@@ -411,6 +486,45 @@ class DestinoController {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             $this->handleError("Erro ao listar localizações.", $e);
+            return [];
+        }
+    }
+
+    // Método adicional para listar províncias
+    public function listarProvincias() {
+        try {
+            $sql = "SELECT id_provincia, nome_provincia 
+                   FROM provincias 
+                   ORDER BY nome_provincia ASC";
+            $stmt = $this->db->query($sql);
+
+            if (!$stmt) {
+                throw new Exception("Erro ao executar a consulta para listar províncias.");
+            }
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            $this->handleError("Erro ao listar províncias.", $e);
+            return [];
+        }
+    }
+
+    // Método para obter destinos por província
+    public function buscarDestinosPorProvincia($idProvincia) {
+        try {
+            $sql = "SELECT dt.* 
+                   FROM destinos_turisticos dt
+                   JOIN localizacoes l ON dt.id_localizacao = l.id_localizacao
+                   WHERE l.id_provincia = :id_provincia
+                   ORDER BY dt.nome_destino ASC";
+                   
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id_provincia', $idProvincia, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            $this->handleError("Erro ao buscar destinos por província.", $e);
             return [];
         }
     }

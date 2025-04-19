@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cadastrar_usuario']))
     }
 }
 
-// Obter todos os usuários - CORREÇÃO AQUI
+// Obter todos os usuários
 $resultado = $usuarioController->listarUsuarios();
 
 // Extrair usuários e estatísticas corretamente
@@ -105,35 +105,198 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { display: flex; background-color: #f8f9fa; }
+        :root {
+            --primary-color: #004d40;
+            --secondary-color: #ff9800;
+            --accent-color: #f44336;
+            --light-bg: #f5f5f5;
+            --dark-bg: #212121;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s ease;
+            --border-radius: 8px;
+        }
+        
+        body { 
+            display: flex; 
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+        }
+        
         #sidebar {
             width: 250px;
-            background: #343a40;
-            color: white;
+            background: var(--primary-color);
+            color: var(--text-light);
             height: 100vh;
             padding: 20px;
             position: fixed;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
+        
         #sidebar .user-info {
             background: rgba(255,255,255,0.1);
             padding: 15px;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
+        #sidebar a {
+            color: var(--text-light);
+            transition: var(--transition);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        #sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+            text-decoration: none;
+        }
+        
         #content {
             margin-left: 270px;
             width: calc(100% - 270px);
             padding: 20px;
         }
-        .stat-card {
-            border-left: 5px solid #007bff;
-            transition: transform 0.2s;
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-color);
+            filter: brightness(1.1);
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .btn-success {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-success:hover {
+            background-color: var(--primary-color);
+            filter: brightness(1.1);
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .btn-info {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: var(--text-dark);
+        }
+        
+        .btn-info:hover {
+            background-color: var(--secondary-color);
+            filter: brightness(1.1);
+            box-shadow: var(--hover-shadow);
+            color: var(--text-dark);
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: var(--accent-color);
+            filter: brightness(1.1);
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .stat-card {
+            border-left: 5px solid var(--primary-color);
+            transition: var(--transition);
+            background-color: var(--text-light);
+            border-radius: var(--border-radius);
+        }
+        
         .stat-card:hover {
             transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
         }
+        
         .table-actions button, .table-actions a {
             margin: 0 2px;
+        }
+        
+        .card {
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: none;
+        }
+        
+        .card:hover {
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .modal-content {
+            border-radius: var(--border-radius);
+        }
+        
+        .modal-header {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-radius: calc(var(--border-radius) - 1px) calc(var(--border-radius) - 1px) 0 0;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 77, 64, 0.25);
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+        }
+        
+        table.dataTable thead th {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-bottom: none;
+        }
+        
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .page-link {
+            color: var(--primary-color);
+        }
+        
+        .page-link:hover {
+            color: var(--text-light);
+            background-color: var(--primary-color);
+        }
+        
+        .badge.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .badge.bg-secondary {
+            background-color: var(--secondary-color) !important;
+            color: var(--text-dark);
+        }
+        
+        .badge.bg-danger {
+            background-color: var(--accent-color) !important;
         }
     </style>
 </head>
@@ -141,32 +304,27 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
 
 <!-- Sidebar com informações do usuário destacadas -->
 <div id="sidebar">
+    
     <div class="user-info">
         <h5><i class="fas fa-user-circle"></i> Usuário Logado</h5>
         <p class="mb-0"><?= htmlspecialchars($usuarioLogado['nome'] ?? 'Usuário') ?></p>
         <small><?= htmlspecialchars($usuarioLogado['email'] ?? 'Email') ?></small>
     </div>
-    <a href="painel_admin.php" class="mb-2 d-block text-white text-decoration-none">
-        <i class="fas fa-tachometer-alt"></i> Dashboard
-    </a>
-    <a href="gerenciar_usuarios.php" class="mb-2 d-block text-white text-decoration-none">
-        <i class="fas fa-users"></i> Gerenciar Usuários
+    <a href="painel_admin.php" class="d-block text-decoration-none">
+        <i class="fas fa-users"></i> Painel Admin
     </a>
     <?php if (($usuarioLogado['tipo_usuario'] ?? '') === 'super_admin'): ?>
-        <a href="solicitacoes_pendentes.php" class="mb-2 d-block text-white text-decoration-none">
+        <a href="solicitacoes_pendentes.php" class="d-block text-decoration-none">
             <i class="fas fa-clock"></i> Solicitações Pendentes
         </a>
     <?php endif; ?>
-    <a href="logout.php" class="mb-2 d-block text-white text-decoration-none">
-        <i class="fas fa-sign-out-alt"></i> Sair
-    </a>
 </div>
 
 <!-- Conteúdo Principal -->
 <div id="content">
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Gerenciar Usuários</h2>
+            <h2><i class="fas fa-users-cog"></i> Gerenciar Usuários</h2>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#cadastroModal">
                 <i class="fas fa-user-plus"></i> Novo Usuário
             </button>
@@ -183,19 +341,19 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
         <div class="row mb-4">
             <div class="col-md-4">
                 <div class="card stat-card shadow-sm p-3">
-                    <h5>Total de Usuários</h5>
+                    <h5><i class="fas fa-users"></i> Total de Usuários</h5>
                     <p class="fs-4 mb-0"><?= $totalUsuarios ?></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card stat-card shadow-sm p-3">
-                    <h5>Administradores</h5>
+                    <h5><i class="fas fa-user-shield"></i> Administradores</h5>
                     <p class="fs-4 mb-0"><?= $totalAdmins ?></p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card stat-card shadow-sm p-3">
-                    <h5>Usuários</h5>
+                    <h5><i class="fas fa-user"></i> Usuários Comuns</h5>
                     <p class="fs-4 mb-0"><?= $totalUsuariosComuns ?></p>
                 </div>
             </div>
@@ -274,25 +432,25 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Cadastrar Novo Usuário</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Cadastrar Novo Usuário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="POST">
                     <div class="mb-3">
-                        <label class="form-label">Nome</label>
+                        <label class="form-label"><i class="fas fa-user"></i> Nome</label>
                         <input type="text" class="form-control" name="nome" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
+                        <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
                         <input type="email" class="form-control" name="email" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Senha</label>
+                        <label class="form-label"><i class="fas fa-key"></i> Senha</label>
                         <input type="password" class="form-control" name="senha" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Tipo de Usuário</label>
+                        <label class="form-label"><i class="fas fa-user-tag"></i> Tipo de Usuário</label>
                         <select class="form-control" name="tipo_usuario">
                             <option value="comum">Usuário Comum</option>
                             <?php if (in_array($tipoUsuario, ['admin', 'super_admin'])): ?>
@@ -303,9 +461,11 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
                             <?php endif; ?>
                         </select>
                     </div>
-                    <button type="submit" name="cadastrar_usuario" class="btn btn-success w-100">
-                        Cadastrar
-                    </button>
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="cadastrar_usuario" class="btn btn-success">
+                            <i class="fas fa-save"></i> Cadastrar
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -332,7 +492,14 @@ $(document).ready(function() {
             { width: '30%' },
             { width: '15%' },
             { width: '20%', orderable: false }
-        ]
+        ],
+        initComplete: function() {
+            // Aplicar estilos personalizados após a inicialização
+            $('.dataTables_wrapper .pagination .page-item.active .page-link').css({
+                'background-color': 'var(--primary-color)',
+                'border-color': 'var(--primary-color)'
+            });
+        }
     });
 });
 </script>

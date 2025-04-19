@@ -1,66 +1,52 @@
 <?php
-require_once '../config/database.php'; 
-use Config\Database;
+// Incluir configuração de banco de dados
+require_once('../config/database.php');
 
-try {
-    $database = new Database();
-    $conn = $database->getConnection();
-    
-    // Configuração da paginação
-    $por_pagina = 10;
-    $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-    $offset = ($pagina - 1) * $por_pagina;
-    
-    // Processamento dos filtros
-    $where = [];
-    $params = [];
-    
-    if (!empty($_GET['busca'])) {
-        $where[] = "(d.nome_destino LIKE ? OR d.localizacao LIKE ?)";
-        $params[] = "%{$_GET['busca']}%";
-        $params[] = "%{$_GET['busca']}%";
-    }
-    
-    if (!empty($_GET['categoria'])) {
-        $where[] = "d.id_categoria = ?";
-        $params[] = $_GET['categoria'];
-    }
-    
-    $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
-    
-    // Queries principais
-    $sqlTotal = "SELECT COUNT(*) as total FROM destinos_turisticos d $whereClause";
-    $sqlCategorias = "SELECT id_categoria, nome_categoria, 
-                      (SELECT COUNT(*) FROM destinos_turisticos 
-                       WHERE id_categoria = c.id_categoria) as total 
-                      FROM categorias c";
-    $sqlDestinos = "
-        SELECT d.id, d.nome_destino, COALESCE(c.nome_categoria, 'Sem Categoria') as categoria,
-               d.localizacao
+// Usar a classe Database para obter a conexão
+use Config\Database;
+$conn = Database::getConnection();
+
+// Inicializar variáveis de filtro
+$categoria = isset($_GET['categoria']) ? $_GET['categoria'] : '';
+$destaque = isset($_GET['destaque']) ? $_GET['destaque'] : '';
+
+// Construir a consulta SQL base
+$sql = "SELECT d.*, c.nome_categoria, l.nome_local 
         FROM destinos_turisticos d
         LEFT JOIN categorias c ON d.id_categoria = c.id_categoria
-        $whereClause
-        ORDER BY d.id DESC
-        LIMIT $por_pagina OFFSET $offset";
-    
-    // Execução das queries
-    $stmtTotal = !empty($params) ? $conn->prepare($sqlTotal) : $conn->query($sqlTotal);
-    $stmtCategorias = $conn->query($sqlCategorias);
-    $stmtDestinos = !empty($params) ? $conn->prepare($sqlDestinos) : $conn->query($sqlDestinos);
-    
-    if (!empty($params)) {
-        $stmtTotal->execute($params);
-        $stmtDestinos->execute($params);
-    }
-    
-    $total = !empty($params) ? $stmtTotal->fetch()['total'] : $stmtTotal->fetch()['total'];
-    $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
-    $destinos = $stmtDestinos->fetchAll(PDO::FETCH_ASSOC);
-    $total_paginas = ceil($total / $por_pagina);
-    
-} catch (PDOException $e) {
-    die("Erro na conexão: " . $e->getMessage());
+        LEFT JOIN localizacoes l ON d.id_localizacao = l.id_localizacao
+        WHERE 1=1";
+
+// Adicionar condições de filtro se especificadas
+if (!empty($categoria)) {
+    $sql .= " AND d.id_categoria = :categoria";
 }
+
+if ($destaque == '1') {
+    $sql .= " AND d.is_maravilha = 1";
+} elseif ($destaque == '0') {
+    $sql .= " AND d.is_maravilha = 0";
+}
+
+// Ordenar por data de cadastro (mais recente primeiro)
+$sql .= " ORDER BY d.data_cadastro DESC";
+
+// Preparar e executar a consulta
+$stmt = $conn->prepare($sql);
+
+// Vincular parâmetros se necessário
+if (!empty($categoria)) {
+    $stmt->bindParam(':categoria', $categoria, PDO::PARAM_INT);
+}
+
+$stmt->execute();
+$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Buscar todas as categorias para o filtro
+$sql_categorias = "SELECT * FROM categorias ORDER BY nome_categoria";
+$stmt_categorias = $conn->prepare($sql_categorias);
+$stmt_categorias->execute();
+$categorias = $stmt_categorias->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -68,348 +54,593 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Destinos - Angola Tours</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Gestão de Destinos - Destinos Angola</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #1a237e;
-            --secondary: #0d47a1;
-            --accent: #2962ff;
-            --background: #f5f6fa;
-            --surface: #ffffff;
-            --text: #333333;
-            --error: #d32f2f;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --primary: #004d40;
+            --primary-light: #006355;
+            --primary-dark: #003b32;
+            --secondary: #ff9800;
+            --secondary-light: #ffb74d;
+            --text-dark: #333333;
+            --text-light: #6c757d;
+            --background: #f5f5f5;
+            --white: #ffffff;
+            --border: #e0e0e0;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --info: #2196f3;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--background);
-            color: var(--text);
-            line-height: 1.6;
+            background-color: var(--background);
+            color: var(--text-dark);
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
+        .top-bar {
+            background-color: var(--primary);
+            padding: 14px 24px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: var(--surface);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
+            color: var(--white);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .header h1 {
-            color: var(--primary);
-            font-size: 24px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            font-size: 24px;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
-
-        .tools {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        .logo-section {
             display: flex;
-            gap: 15px;
             align-items: center;
-            box-shadow: var(--shadow);
         }
 
-        .search-box {
-            flex: 1;
-            position: relative;
+        .logo-section h1 {
+            font-size: 20px;
+            margin-left: 12px;
+            font-weight: 500;
         }
 
-        .search-box input {
-            width: 100%;
-            padding: 10px 15px 10px 35px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .logo-icon {
+            background-color: var(--white);
+            color: var(--primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
         }
 
+        .user-info i {
+            font-size: 18px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: var(--white);
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .back-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .content-wrapper {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(0, 77, 64, 0.05);
+        }
+
+        .search-filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--white);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 24px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: var(--background);
+            border-radius: 4px;
+            padding: 8px 14px;
+            width: 280px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 0 10px;
+            width: 100%;
+            outline: none;
+            color: var(--text-dark);
+        }
+
         .search-box i {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
+            color: var(--text-light);
         }
 
-        select {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: white;
-            min-width: 200px;
+        .filters {
+            display: flex;
+            gap: 16px;
         }
 
-        .table-container {
-            background: var(--surface);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .filter-select {
+            background-color: var(--background);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: var(--text-dark);
+            outline: none;
+            min-width: 150px;
+        }
+
+        .data-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
             overflow: hidden;
-            margin-bottom: 20px;
         }
 
-        table {
+        .data-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th, td {
-            padding: 15px;
+        .data-table th {
             text-align: left;
-            border-bottom: 1px solid #eee;
+            padding: 16px;
+            background-color: rgba(0, 77, 64, 0.03);
+            font-weight: 500;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
         }
 
-        th {
-            background: var(--primary);
-            color: white;
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(0, 77, 64, 0.02);
+        }
+
+        .thumbnail {
+            width: 54px;
+            height: 54px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 12px;
             font-weight: 500;
         }
 
-        tr:hover {
-            background: #f8f9fa;
+        .badge-featured {
+            background-color: rgba(255, 152, 0, 0.12);
+            color: var(--secondary);
         }
 
-        .actions {
+        .badge i {
+            margin-right: 4px;
+        }
+
+        .action-btns {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 14px;
-            transition: all 0.3s ease;
+            justify-content: center;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            color: var(--white);
+            transition: var(--transition);
         }
 
-        .btn-primary {
-            background: var(--accent);
-            color: white;
+        .view-btn {
+            background-color: var(--info);
         }
 
-        .btn-danger {
-            background: var(--error);
-            color: white;
+        .view-btn:hover {
+            background-color: #1976d2;
         }
 
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .edit-btn {
+            background-color: var(--secondary);
+        }
+
+        .edit-btn:hover {
+            background-color: #f57c00;
+        }
+
+        .delete-btn {
+            background-color: var(--danger);
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
         }
 
         .pagination {
             display: flex;
             justify-content: center;
-            gap: 5px;
-            margin-top: 20px;
+            margin-top: 24px;
+            gap: 6px;
         }
 
-        .page-link {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-decoration: none;
-            color: var(--text);
-            background: var(--surface);
-            transition: all 0.3s ease;
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background-color: var(--white);
+            color: var(--text-dark);
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: var(--transition);
         }
 
-        .page-link.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
+        .page-btn.active {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
         }
 
-        .page-link:hover:not(.active) {
-            background: #f8f9fa;
+        .page-btn:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 16px;
         }
 
         @media (max-width: 768px) {
-            .tools {
+            .search-filter-bar {
                 flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
             }
-            
+
             .search-box {
                 width: 100%;
             }
-            
-            select {
+
+            .filters {
                 width: 100%;
+                flex-wrap: wrap;
             }
-            
-            .actions {
+
+            .filter-group {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .data-table th:nth-child(3),
+            .data-table td:nth-child(3),
+            .data-table th:nth-child(5),
+            .data-table td:nth-child(5) {
+                display: none;
+            }
+
+            .action-buttons {
                 flex-direction: column;
             }
-            
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+
+            .user-actions {
+                gap: 8px;
+            }
+
+            .user-info span {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Gestão de Destinos</h1>
-            <a href="cadastrar_destino.php" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Novo Destino
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h1>Destinos Angola</h1>
+        </div>
+        <div class="user-actions">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span>Admin</span>
+            </div>
+            <a href="painel_admin.php" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Voltar ao Painel
             </a>
         </div>
+    </div>
 
-        <div class="stats">
-            <div class="stat-card">
-                <h3><?php echo $total; ?></h3>
-                <p>Total de Destinos</p>
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">Gestão de Destinos Turísticos</h2>
+            <div class="action-buttons">
+                <a href="cadastrar_destino.php" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Novo Destino
+                </a>
+                
             </div>
-            <?php foreach ($categorias as $categoria): ?>
-                <div class="stat-card">
-                    <h3><?php echo $categoria['total']; ?></h3>
-                    <p><?php echo htmlspecialchars($categoria['nome_categoria']); ?></p>
-                </div>
-            <?php endforeach; ?>
         </div>
 
-        <div class="tools">
+        <!-- Search and Filter Bar -->
+        <form method="GET" action="" id="filterForm" class="search-filter-bar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="busca" placeholder="Buscar destinos..." 
-                       value="<?php echo htmlspecialchars($_GET['busca'] ?? ''); ?>">
+                <input type="text" id="searchInput" placeholder="Buscar por nome do destino...">
             </div>
-            
-            <select id="categoria">
-                <option value="">Todas as categorias</option>
-                <?php foreach ($categorias as $categoria): ?>
-                    <option value="<?php echo $categoria['id_categoria']; ?>"
-                            <?php echo ($_GET['categoria'] ?? '') == $categoria['id_categoria'] ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($categoria['nome_categoria']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <span class="filter-label">Categoria:</span>
+                    <select class="filter-select" name="categoria" id="categoriaFilter">
+                        <option value="">Todas</option>
+                        <?php foreach($categorias as $cat): ?>
+                            <option value="<?php echo $cat['id_categoria']; ?>" <?php echo ($categoria == $cat['id_categoria']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cat['nome_categoria']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Destaque:</span>
+                    <select class="filter-select" name="destaque" id="destaqueFilter">
+                        <option value="">Todos</option>
+                        <option value="1" <?php echo ($destaque == '1') ? 'selected' : ''; ?>>Sim</option>
+                        <option value="0" <?php echo ($destaque == '0') ? 'selected' : ''; ?>>Não</option>
+                    </select>
+                </div>
+            </div>
+        </form>
 
-        <div class="table-container">
-            <table>
+        <!-- Data Table -->
+        <div class="data-card">
+            <table class="data-table" id="destinosTable">
                 <thead>
                     <tr>
-                        <th>Destino</th>
+                        <th width="60">Imagem</th>
+                        <th>Nome do Destino</th>
                         <th>Categoria</th>
-                        <th>Localização</th>
-                        <th>Ações</th>
+                        <th>Destaque</th>
+                        <th>Data Cadastro</th>
+                        <th width="140">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($destinos)): ?>
-                        <?php foreach ($destinos as $destino): ?>
+                    <?php if (count($result) > 0): ?>
+                        <?php foreach($result as $row): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($destino['nome_destino']); ?></td>
-                                <td><?php echo htmlspecialchars($destino['categoria']); ?></td>
-                                <td><?php echo htmlspecialchars($destino['localizacao']); ?></td>
-                                <td class="actions">
-                                    <a href="editar_destino.php?id=<?php echo $destino['id']; ?>" 
-                                       class="btn btn-primary" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="javascript:void(0)" 
-                                       onclick="confirmarExclusao(<?php echo $destino['id']; ?>)"
-                                       class="btn btn-danger" title="Excluir">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                            <td>
+    <?php 
+    echo "<p style='font-size:10px;'>" . htmlspecialchars($row['imagem']) . "</p>";
+    ?>
+    <img src="../uploads/<?php echo htmlspecialchars($row['imagem']); ?>" alt="Foto" class="thumbnail">
+</td>
+                                <td><?php echo htmlspecialchars($row['nome_destino']); ?></td>
+                                <td><?php echo htmlspecialchars($row['nome_categoria']); ?></td>
+                                <td>
+                                    <?php if($row['is_maravilha'] == 1): ?>
+                                        <span class="badge badge-featured"><i class="fas fa-crown"></i> Maravilha</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo date('d/m/Y', strtotime($row['data_cadastro'])); ?></td>
+                                <td>
+                                    <div class="action-btns">
+                                        <a href="visualizar_destino.php?id=<?php echo $row['id']; ?>" class="icon-btn view-btn" title="Visualizar">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="editar_destino.php?id=<?php echo $row['id']; ?>" class="icon-btn edit-btn" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="javascript:void(0);" onclick="confirmarExclusao(<?php echo $row['id']; ?>)" class="icon-btn delete-btn" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" style="text-align: center;">Nenhum destino encontrado</td>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                    <p>Nenhum destino encontrado com os filtros selecionados.</p>
+                                </div>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
-        <?php if ($total_paginas > 1): ?>
-            <div class="pagination">
-                <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                    <a href="?pagina=<?php echo $i; ?><?php echo isset($_GET['busca']) ? '&busca=' . htmlspecialchars($_GET['busca']) : ''; ?><?php echo isset($_GET['categoria']) ? '&categoria=' . htmlspecialchars($_GET['categoria']) : ''; ?>" 
-                       class="page-link <?php echo $pagina == $i ? 'active' : ''; ?>">
-                        <?php echo $i; ?>
-                    </a>
-                <?php endfor; ?>
-            </div>
-        <?php endif; ?>
+        <!-- Pagination -->
+        <div class="pagination">
+            <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
     </div>
 
     <script>
-        const busca = document.getElementById('busca');
-        const categoria = document.getElementById('categoria');
-
-        function atualizarFiltros() {
-            const params = new URLSearchParams(window.location.search);
-            
-            if (busca.value) params.set('busca', busca.value);
-            else params.delete('busca');
-            
-            if (categoria.value) params.set('categoria', categoria.value);
-            else params.delete('categoria');
-            
-            window.location.href = '?' + params.toString();
-        }
-
-        function confirmarExclusao(id) {
-            if (confirm('Tem certeza que deseja excluir este destino?')) {
-                window.location.href = 'excluir_destino.php?id=' + id;
-            }
-        }
-
-        busca.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') atualizarFiltros();
+        // Aplicar filtros automaticamente quando mudar os selects
+        document.getElementById('categoriaFilter').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
         });
         
-        categoria.addEventListener('change', atualizarFiltros);
+        document.getElementById('destaqueFilter').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+        
+        // Função para busca rápida na tabela
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const table = document.getElementById('destinosTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const destinoName = rows[i].getElementsByTagName('td')[1];
+                if (destinoName) {
+                    const textValue = destinoName.textContent || destinoName.innerText;
+                    if (textValue.toLowerCase().indexOf(searchValue) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
+                }
+            }
+        });
+        
+        // Função para confirmar exclusão
+        function confirmarExclusao(id) {
+            if (confirm("Tem certeza que deseja excluir este destino?")) {
+                window.location.href = "excluir_destino.php?id=" + id;
+            }
+        }
     </script>
 </body>
 </html>
+<?php
+// Não é necessário fechar a conexão com PDO, ele faz isso automaticamente ao final do script
+?>
