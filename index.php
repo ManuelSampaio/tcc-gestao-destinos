@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Se estiver logado como admin ou super_admin, redireciona para o painel
@@ -1610,7 +1610,7 @@ header .hamburger {
             
             <div class="counter-container">
                 <div class="counter-item">
-                    <div class="counter" data-target="21">0</div>
+                    <div class="counter" data-target="18">0</div>
                     <div class="counter-text">Províncias</div>
                 </div>
                 
@@ -1636,7 +1636,7 @@ header .hamburger {
     <section id="sobre" class="sobre">
         <div class="section-header">
             <h2>Sobre Nós</h2>
-            <p>A Destinos Angola é uma plataforma dedicada a promover as maravilhas naturais e culturais de Angola. Criada com a missão de revelar ao mundo a incrível diversidade deste país africano, trabalhamos para conectar viajantes a experiências autênticas que valorizam as comunidades locais e preservam o patrimônio angolano.</p>
+            <p>Conheça mais sobre a nossa missão de promover o turismo em Angola.</p>
         </div>
     </section>
     <!-- Footer -->

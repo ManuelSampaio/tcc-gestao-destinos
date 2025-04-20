@@ -102,19 +102,22 @@ ob_end_flush(); // Libera o buffer de saída
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro</title>
+    <title>Cadastro - Gestão de Destinos Turísticos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
-            --primary: #1a73e8;
-            --primary-dark: #1557b0;
-            --text-color: #333;
-            --text-light: #6b7280;
-            --background: #f8f9fa;
-            --white: #ffffff;
-            --error: #e53935;
-            --success: #4caf50;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --primary-color: #004d40;
+            --secondary-color: #ff9800;
+            --accent-color: #f44336;
+            --light-bg: #f5f5f5;
+            --dark-bg: #212121;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s ease;
+            --border-radius: 8px;
+            --success: #00c853;
         }
         
         * {
@@ -125,139 +128,227 @@ ob_end_flush(); // Libera o buffer de saída
         }
         
         body {
-            background-color: var(--background);
+            background-color: var(--light-bg);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-color);
+            color: var(--text-dark);
             padding: 20px;
         }
         
         .container {
-            width: 420px;
+            width: 440px;
             max-width: 100%;
-            background-color: var(--white);
-            border-radius: 10px;
+            background-color: var(--text-light);
+            border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .container:hover {
+            box-shadow: var(--hover-shadow);
         }
         
         .header {
-            background: linear-gradient(180deg, #1a73e8 0%, #1557b0 100%);
-            color: white;
-            padding: 25px 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #00695c 100%);
+            color: var(--text-light);
+            padding: 30px 25px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
         }
         
         .header h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            font-weight: 500;
+            font-size: 26px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .header h1:before {
+            content: '\f234';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: var(--secondary-color);
         }
         
         .header p {
-            font-size: 15px;
+            font-size: 16px;
             opacity: 0.9;
         }
         
         .form-container {
-            padding: 25px;
+            padding: 30px;
         }
         
         .error {
-            background-color: rgba(229, 57, 53, 0.1);
-            color: var(--error);
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--accent-color);
+            padding: 14px 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
             font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .success {
+            background-color: rgba(0, 200, 83, 0.1);
+            color: var(--success);
+            padding: 14px 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--success);
         }
         
         .input-group {
-            margin-bottom: 18px;
+            margin-bottom: 22px;
             position: relative;
         }
         
         .input-group i {
             position: absolute;
-            left: 12px;
-            top: 14px;
-            color: var(--text-light);
+            left: 15px;
+            top: 15px;
+            color: #757575;
+            transition: var(--transition);
         }
         
         .input-group input {
             width: 100%;
-            padding: 12px 12px 12px 40px;
-            border: 1.5px solid #ddd;
-            border-radius: 6px;
-            font-size: 15px;
-            transition: all 0.2s ease;
-            background-color: var(--white);
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: #fafafa;
         }
         
         .input-group input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 77, 64, 0.2);
             outline: none;
+            background-color: #ffffff;
+        }
+        
+        .input-group input:focus + i {
+            color: var(--primary-color);
+        }
+        
+        .error-message {
+            color: var(--accent-color);
+            font-size: 13px;
+            margin-top: 6px;
+            margin-left: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .error-message::before {
+            content: '\f071';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 11px;
         }
         
         button {
             width: 100%;
-            padding: 13px;
+            padding: 15px;
             border: none;
-            border-radius: 6px;
-            background: linear-gradient(180deg, #1a73e8 0%, #1557b0 100%);
-            color: white;
-            font-size: 15px;
-            font-weight: 500;
+            border-radius: var(--border-radius);
+            background: linear-gradient(to right, var(--primary-color), #00796b);
+            color: var(--text-light);
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: var(--transition);
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::before {
+            left: 100%;
         }
         
         button:hover {
-            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
+            background: linear-gradient(to right, #00695c, var(--primary-color));
+            box-shadow: 0 4px 8px rgba(0, 77, 64, 0.3);
+            transform: translateY(-2px);
         }
         
         .footer {
             text-align: center;
-            padding-top: 5px;
-            color: var(--text-light);
-            font-size: 14px;
+            padding-top: 10px;
+            color: #757575;
+            font-size: 15px;
         }
         
         .footer a {
-            color: var(--primary);
+            color: var(--primary-color);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        .footer a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: var(--transition);
         }
         
         .footer a:hover {
-            text-decoration: underline;
+            color: var(--secondary-color);
         }
         
-        /* Mensagem de sucesso - usada na página de login após cadastro bem-sucedido */
-        .success {
-            background-color: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .footer a:hover::after {
+            width: 100%;
         }
         
-        /* Melhorias de responsividade */
         @media (max-width: 480px) {
             .container {
                 width: 100%;
@@ -265,6 +356,10 @@ ob_end_flush(); // Libera o buffer de saída
             
             body {
                 padding: 15px;
+            }
+            
+            .form-container {
+                padding: 20px;
             }
         }
     </style>
@@ -277,27 +372,36 @@ ob_end_flush(); // Libera o buffer de saída
         </div>
         
         <div class="form-container">
-            <?php if (!empty($erro)): ?>
+            <?php if (isset($_SESSION['error_message']) && !empty($_SESSION['error_message'])): ?>
                 <div class="error">
                     <i class="fas fa-exclamation-circle"></i>
-                    <?= htmlspecialchars($erro) ?>
+                    <?= htmlspecialchars($_SESSION['error_message']) ?>
                 </div>
+                <?php unset($_SESSION['error_message']); ?>
+            <?php endif; ?>
+            
+            <?php if (isset($_SESSION['success_message']) && !empty($_SESSION['success_message'])): ?>
+                <div class="success">
+                    <i class="fas fa-check-circle"></i>
+                    <?= htmlspecialchars($_SESSION['success_message']) ?>
+                </div>
+                <?php unset($_SESSION['success_message']); ?>
             <?php endif; ?>
             
             <form method="POST" action="cadastro.php">
                 <div class="input-group">
-                    <i class="fas fa-user"></i>
                     <input type="text" name="nome" placeholder="Nome Completo" value="<?= htmlspecialchars($nome ?? '') ?>" required>
+                    <i class="fas fa-user"></i>
                 </div>
                 
                 <div class="input-group">
-                    <i class="fas fa-envelope"></i>
                     <input type="email" name="email" placeholder="Email" value="<?= htmlspecialchars($email ?? '') ?>" required>
+                    <i class="fas fa-envelope"></i>
                 </div>
                 
                 <div class="input-group">
+                    <input type="password" name="senha" placeholder="Senha (mínimo 4 caracteres)" required>
                     <i class="fas fa-lock"></i>
-                    <input type="password" name="senha" placeholder="Senha (mínimo 8 caracteres)" required>
                 </div>
                 
                 <button type="submit" name="cadastrar_usuario">
@@ -311,7 +415,7 @@ ob_end_flush(); // Libera o buffer de saída
         </div>
     </div>
     
-    <!-- Adicionado: JavaScript para validação do formulário do lado do cliente -->
+    <!-- Script para validação do formulário do lado do cliente -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('form');
@@ -321,6 +425,9 @@ ob_end_flush(); // Libera o buffer de saída
             const nome = form.querySelector('input[name="nome"]');
             const email = form.querySelector('input[name="email"]');
             const senha = form.querySelector('input[name="senha"]');
+            
+            // Limpar mensagens de erro anteriores
+            clearErrors();
             
             // Validação básica dos campos
             if (nome.value.trim() === '') {
@@ -339,8 +446,8 @@ ob_end_flush(); // Libera o buffer de saída
             if (senha.value.trim() === '') {
                 showError(senha, 'Senha é obrigatória');
                 valid = false;
-            } else if (senha.value.length < 8) {
-                showError(senha, 'Senha deve ter pelo menos 8 caracteres');
+            } else if (senha.value.length < 4) {
+                showError(senha, 'Senha deve ter pelo menos 4 caracteres');
                 valid = false;
             }
             
@@ -354,30 +461,38 @@ ob_end_flush(); // Libera o buffer de saída
         inputs.forEach(input => {
             input.addEventListener('input', function() {
                 this.style.borderColor = '';
-                if (this.nextElementSibling && this.nextElementSibling.className === 'error-message') {
-                    this.nextElementSibling.remove();
+                const errorElement = this.parentNode.querySelector('.error-message');
+                if (errorElement) {
+                    errorElement.remove();
                 }
             });
         });
         
         // Funções auxiliares
         function showError(input, message) {
-            input.style.borderColor = 'var(--error)';
+            input.style.borderColor = 'var(--accent-color)';
             
             // Verificar se já existe uma mensagem de erro
-            if (input.nextElementSibling && input.nextElementSibling.className === 'error-message') {
-                input.nextElementSibling.textContent = message;
+            const existingError = input.parentNode.querySelector('.error-message');
+            if (existingError) {
+                existingError.textContent = message;
             } else {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
-                errorDiv.style.color = 'var(--error)';
-                errorDiv.style.fontSize = '12px';
-                errorDiv.style.marginTop = '5px';
-                errorDiv.style.marginBottom = '5px';
                 errorDiv.textContent = message;
                 
-                input.parentNode.insertBefore(errorDiv, input.nextSibling);
+                input.parentNode.appendChild(errorDiv);
             }
+        }
+        
+        function clearErrors() {
+            const errorMessages = document.querySelectorAll('.error-message');
+            errorMessages.forEach(error => error.remove());
+            
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.style.borderColor = '';
+            });
         }
         
         function isValidEmail(email) {

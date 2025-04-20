@@ -109,11 +109,6 @@ $usuarioLogado = $_SESSION['usuario'];
             font-size: 0.9rem;
         }
 
-        .sidebar-header p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.85rem;
-        }
-
         .logo-container {
             display: flex;
             justify-content: center;
@@ -137,61 +132,6 @@ $usuarioLogado = $_SESSION['usuario'];
         .angola-logo::before {
             content: "🇦🇴";
             font-size: 1.8rem;
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            color: white;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(to right, rgba(0, 77, 64, 0.7), rgba(0, 99, 85, 0.7));
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .user-info::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, transparent 70%, var(--angola-yellow) 150%);
-            opacity: 0.1;
-        }
-
-        .user-info i {
-            font-size: 2rem;
-            margin-bottom: 0.8rem;
-            color: var(--angola-yellow);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .user-name {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.2rem;
-        }
-
-        .user-email {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .user-type {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            background: var(--angola-yellow);
-            color: var(--primary-dark);
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-top: 0.5rem;
-            text-transform: uppercase;
         }
 
         .menu-section {
@@ -456,13 +396,6 @@ $usuarioLogado = $_SESSION['usuario'];
             background-color: var(--angola-black);
         }
 
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
         .action-card {
             background: var(--white);
             border-radius: 12px;
@@ -476,6 +409,8 @@ $usuarioLogado = $_SESSION['usuario'];
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            width: 200px;
+            margin-bottom: 2rem;
         }
 
         .action-card::before {
@@ -531,108 +466,6 @@ $usuarioLogado = $_SESSION['usuario'];
             color: var(--text-light);
         }
 
-        .recent-activity {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-            color: var(--primary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section-title i {
-            color: var(--angola-yellow);
-        }
-
-        .view-all {
-            color: var(--primary);
-            font-size: 0.8rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            transition: all 0.3s ease;
-        }
-
-        .view-all:hover {
-            color: var(--primary-dark);
-            transform: translateX(3px);
-        }
-
-        .activity-list {
-            list-style: none;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-item:hover {
-            background: rgba(0,0,0,0.01);
-            transform: translateX(5px);
-        }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(0, 77, 64, 0.1);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-
-        .activity-details {
-            flex: 1;
-        }
-
-        .activity-title {
-            font-weight: 500;
-            margin-bottom: 0.2rem;
-        }
-
-        .activity-time {
-            font-size: 0.75rem;
-            color: var(--text-light);
-        }
-
-        .activity-action {
-            color: var(--text-light);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .activity-action:hover {
-            color: var(--primary);
-            transform: scale(1.1);
-        }
-
         .footer {
             display: flex;
             justify-content: space-between;
@@ -648,10 +481,6 @@ $usuarioLogado = $_SESSION['usuario'];
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .copyright img {
-            height: 20px;
         }
 
         .footer-links {
@@ -718,18 +547,6 @@ $usuarioLogado = $_SESSION['usuario'];
             box-shadow: 0 4px 12px rgba(0, 77, 64, 0.3);
         }
 
-        .btn-secondary {
-            background: var(--angola-yellow);
-            color: var(--text-dark);
-            box-shadow: 0 2px 8px rgba(247, 214, 24, 0.2);
-        }
-
-        .btn-secondary:hover {
-            background: #e6c518;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(247, 214, 24, 0.3);
-        }
-
         /* Responsividade */
         @media (max-width: 1024px) {
             .angola-feature {
@@ -761,10 +578,6 @@ $usuarioLogado = $_SESSION['usuario'];
                 grid-template-columns: 1fr;
             }
 
-            .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
             .header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -794,8 +607,8 @@ $usuarioLogado = $_SESSION['usuario'];
         }
 
         @media (max-width: 480px) {
-            .quick-actions {
-                grid-template-columns: 1fr;
+            .action-card {
+                width: 100%;
             }
         }
     </style>
@@ -807,11 +620,7 @@ $usuarioLogado = $_SESSION['usuario'];
                 <div class="angola-logo"></div>
             </div>
             <h2>Destinos Angola</h2>
-          
         </div>
-        
-        
-        
         
         <div class="menu-section">
             <div class="menu-section-title">Gestão de Conteúdo</div>
@@ -821,9 +630,8 @@ $usuarioLogado = $_SESSION['usuario'];
             </a>
             <a href="cadastrar_destino.php" class="menu-item">
                 <i class="fas fa-plus-circle"></i>
-             Novo Destino
+                Novo Destino
             </a>
-            
         </div>
         
         <div class="menu-section">
@@ -878,7 +686,6 @@ $usuarioLogado = $_SESSION['usuario'];
                     <i class="fas fa-arrow-up" style="color: var(--success);"></i>
                 </div>
             </div>
-           
         </div>
 
         <div class="angola-feature">
@@ -895,16 +702,13 @@ $usuarioLogado = $_SESSION['usuario'];
             </div>
         </div>
 
-        
-        
-        
-            <div class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-plus"></i>
-                </div>
-                <h3 class="action-title">Novo Destino</h3>
-                <p class="action-desc">Adicionar um novo destino turístico</p>
+        <div class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-plus"></i>
             </div>
+            <h3 class="action-title">Novo Destino</h3>
+            <p class="action-desc">Adicionar um novo destino turístico</p>
+        </div>
            
         <div class="footer">
             <div class="copyright">
@@ -1037,47 +841,17 @@ $usuarioLogado = $_SESSION['usuario'];
             }, 1500);
         });
 
-        // Animação nas action cards
-        document.querySelectorAll('.action-card').forEach(card => {
-            card.addEventListener('click', function() {
-                this.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 200);
-                
-                // Simulando redirecionamento
-                const actionTitle = this.querySelector('.action-title').textContent;
-                let redirectUrl = '';
-                
-                switch(actionTitle) {
-                    case 'Novo Destino':
-                        redirectUrl = 'cadastrar_destino.php';
-                        break;
-                    case 'Novo Usuário':
-                        redirectUrl = 'cadastrar_usuario.php';
-                        break;
-                    case 'Relatórios':
-                        redirectUrl = 'relatorios.php';
-                        break;
-                    case 'Configurações':
-                        redirectUrl = 'configuracoes.php';
-                        break;
-                }
-                
-                if (redirectUrl) {
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 300);
-                }
-            });
-        });
-
-        // Efeito de hover nos itens de atividade
-        document.querySelectorAll('.activity-item').forEach(item => {
-            item.addEventListener('click', function() {
-                // Aqui pode adicionar ação ao clicar em uma atividade
-                console.log('Atividade clicada:', this.querySelector('.activity-title').textContent);
-            });
+        // Animação na action card
+        document.querySelector('.action-card').addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
+            
+            // Redirecionar para a página de cadastro de destino
+            setTimeout(() => {
+                window.location.href = 'cadastrar_destino.php';
+            }, 300);
         });
     </script>
 </body>
