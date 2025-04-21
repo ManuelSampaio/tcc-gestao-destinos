@@ -3,11 +3,11 @@ namespace App\Controllers;
 
 require_once __DIR__ . '/../models/SolicitacaoAcesso.php';
 require_once __DIR__ . '/../models/Usuario.php';
-require_once __DIR__ . '/../database/Database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 use App\Models\SolicitacaoAcesso;
 use App\Models\Usuario;
-use App\Database\Database;
+use config\Database;
 use PDO;
 use Exception;
 
@@ -17,9 +17,14 @@ class SolicitacaoAcessoController {
     private $usuarioModel;
 
     public function __construct() {
-        $this->db = Database::getConnection();
-        $this->solicitacaoModel = new SolicitacaoAcesso($this->db);
-        $this->usuarioModel = new Usuario($this->db);
+        try {
+            $this->db = Database::getConnection();
+            $this->solicitacaoModel = new SolicitacaoAcesso($this->db);
+            $this->usuarioModel = new Usuario($this->db);
+        } catch (Exception $e) {
+            error_log("Erro na inicialização do controller: " . $e->getMessage());
+            throw new Exception("Erro ao inicializar o controlador de solicitações.");
+        }
     }
 
     /**
@@ -88,7 +93,7 @@ class SolicitacaoAcessoController {
             
             // Se aprovado, atualizar nível de acesso do usuário
             if ($status === 'aprovado') {
-                $atualizacaoUsuario = $this->usuarioModel->atualizarTipoUsuario(
+                $atualizacaoUsuario = $this->usuarioModel->atualizarTipo(
                     $solicitacao['id_usuario'], 
                     $solicitacao['novo_nivel']
                 );
@@ -109,7 +114,9 @@ class SolicitacaoAcessoController {
             
         } catch (Exception $e) {
             // Reverter transação em caso de erro
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             
             error_log("Erro ao processar solicitação: " . $e->getMessage());
             return [
@@ -161,7 +168,7 @@ class SolicitacaoAcessoController {
      * @param string $justificativa Justificativa para a solicitação
      * @return array Resultado da operação
      */
-    public function criarSolicitacao($idUsuario, $novoNivel, $justificativa) {
+    public function criarSolicitacao($idUsuario, $novoNivel, $justificativa = '') {
         try {
             // Verificar se já existe uma solicitação pendente
             $solicitacaoPendente = $this->solicitacaoModel->buscarPendentePorUsuario($idUsuario);
@@ -172,7 +179,7 @@ class SolicitacaoAcessoController {
             
             // Verificar se o usuário já tem o nível solicitado
             $usuario = $this->usuarioModel->buscarPorId($idUsuario);
-            if ($usuario['tipo_usuario'] === $novoNivel) {
+            if ($usuario && $usuario['tipo_usuario'] === $novoNivel) {
                 throw new Exception("Você já possui o nível de acesso solicitado.");
             }
             
@@ -217,9 +224,9 @@ class SolicitacaoAcessoController {
             
             // Garantir que não retorne NULL para nenhum status
             return [
-                'pendente' => $resultado['pendente'] ?? 0,
-                'aprovado' => $resultado['aprovado'] ?? 0,
-                'rejeitado' => $resultado['rejeitado'] ?? 0
+                'pendente' => (int)($resultado['pendente'] ?? 0),
+                'aprovado' => (int)($resultado['aprovado'] ?? 0),
+                'rejeitado' => (int)($resultado['rejeitado'] ?? 0)
             ];
             
         } catch (Exception $e) {
@@ -236,7 +243,7 @@ class SolicitacaoAcessoController {
      * Obtém solicitações pendentes para um usuário específico
      * 
      * @param int $idUsuario ID do usuário
-     * @return array Solicitações pendentes
+     * @return array|null Solicitações pendentes
      */
     public function obterSolicitacoesPendentesUsuario($idUsuario) {
         try {

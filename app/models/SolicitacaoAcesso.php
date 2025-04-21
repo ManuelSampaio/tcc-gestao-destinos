@@ -119,4 +119,39 @@ class SolicitacaoAcesso {
             return false;
         }
     }
+
+    /**
+ * Lista solicitações de acesso com filtro opcional por status
+ * 
+ * @param string|null $status Status a ser filtrado (pendente, aprovado, rejeitado)
+ * @return array Lista de solicitações
+ */
+public function listarSolicitacoes($status = null) {
+    try {
+        $sql = "SELECT sa.*, u.nome as nome_usuario 
+                FROM solicitacoes_acesso sa
+                JOIN usuarios u ON sa.id_usuario = u.id_usuario";
+        
+        $params = [];
+        
+        if ($status !== null) {
+            $sql .= " WHERE sa.status = :status";
+            $params[':status'] = $status;
+        }
+        
+        $sql .= " ORDER BY sa.data_criacao DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        foreach ($params as $param => $value) {
+            $stmt->bindValue($param, $value, PDO::PARAM_STR);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log("Erro ao listar solicitações: " . $e->getMessage());
+        return [];
+    }
+}
 }

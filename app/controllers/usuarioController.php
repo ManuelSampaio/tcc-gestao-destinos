@@ -14,12 +14,14 @@ class UsuarioController
 {
     protected $usuarioModel;
     protected $solicitacaoModel;
+    protected $db;
 
     public function __construct()
     {
         try {
+            $this->db = \Config\Database::getConnection();
             $this->usuarioModel = new Usuario();
-            $this->solicitacaoModel = new SolicitacaoAcesso();
+            $this->solicitacaoModel = new SolicitacaoAcesso($this->db);
         } catch (Exception $e) {
             error_log("Erro ao inicializar UsuarioController: " . $e->getMessage());
             throw new Exception("Erro interno ao carregar o controlador de usuários.");
@@ -158,7 +160,7 @@ class UsuarioController
         }
     }
 
-    public function solicitarMudancaAcesso($nivelSolicitado)
+    public function solicitarMudancaAcesso($nivelSolicitado, $justificativa = '')
     {
         $this->iniciarSessao();
         $usuarioId = $_SESSION['usuario']['id_usuario'] ?? null;
@@ -175,8 +177,10 @@ class UsuarioController
         }
 
         try {
-            $this->solicitacaoModel->solicitarAcesso($usuarioId, $nivelSolicitado);
-            return ['success' => true, 'message' => "Solicitação enviada com sucesso!"];
+            // Usar o método criar da classe SolicitacaoAcesso
+            $resultado = $this->solicitacaoModel->criar($usuarioId, $nivelSolicitado, $justificativa);
+            
+            return ['success' => $resultado, 'message' => $resultado ? "Solicitação enviada com sucesso!" : "Erro ao enviar solicitação."];
         } catch (Exception $e) {
             error_log("Erro ao solicitar mudança de acesso: " . $e->getMessage());
             return ['success' => false, 'message' => "Erro ao solicitar mudança de acesso."];
@@ -193,14 +197,23 @@ class UsuarioController
             $this->iniciarSessao();
             $idAprovador = $_SESSION['usuario']['id_usuario'];
 
-            $this->solicitacaoModel->atualizarStatus($idSolicitacao, $status, $idAprovador);
+            // Buscar solicitação para obter o ID do usuário
+            $solicitacao = $this->solicitacaoModel->buscarPorId($idSolicitacao);
+            
+            if (!$solicitacao) {
+                return ['success' => false, 'message' => "Solicitação não encontrada."];
+            }
+            
+            $idUsuario = $solicitacao['id_usuario'];
+            
+            // Usar o método atualizarStatus em vez de atualizar
+            $resultado = $this->solicitacaoModel->atualizarStatus($idSolicitacao, $status, $idAprovador);
 
-            if ($status === 'aprovado') {
-                $idUsuario = $this->solicitacaoModel->buscarIdUsuarioPorSolicitacao($idSolicitacao);
-                $this->usuarioModel->atualizarUsuario($idUsuario, ['tipo_usuario' => 'admin'], 'super_admin');
+            if ($resultado && $status === 'aprovado') {
+                $this->usuarioModel->atualizarTipo($idUsuario, 'admin');
             }
 
-            return ['success' => true, 'message' => "Solicitação atualizada com sucesso."];
+            return ['success' => $resultado, 'message' => $resultado ? "Solicitação atualizada com sucesso." : "Erro ao atualizar solicitação."];
         } catch (Exception $e) {
             error_log("Erro ao atualizar solicitação: " . $e->getMessage());
             return ['success' => false, 'message' => "Erro ao atualizar solicitação."];
@@ -214,8 +227,9 @@ class UsuarioController
         }
 
         try {
-            $solicitacoes = $this->solicitacaoModel->listarSolicitacoesPendentes();
-            return ['success' => true, 'message' => "Solicitações listadas com sucesso.", 'solicitacoes' => $solicitacoes];
+            // Utilizar o método listarSolicitacoes com o filtro 'pendente'
+            $solicitacoes = $this->solicitacaoModel->listarSolicitacoes('pendente');
+            return ['success' => true, 'solicitacoes' => $solicitacoes];
         } catch (Exception $e) {
             error_log("Erro ao listar solicitações: " . $e->getMessage());
             return ['success' => false, 'message' => "Erro ao listar solicitações."];
@@ -223,26 +237,25 @@ class UsuarioController
     }
 
     /**
- * Atualiza o tipo de usuário
- * 
- * @param int $idUsuario ID do usuário
- * @param string $novoTipo Novo tipo de usuário ('comum', 'admin', 'super_admin')
- * @return bool Resultado da operação
- */
-public function atualizarTipoUsuario(int $idUsuario, string $novoTipo): bool
-{
-    try {
-        $tiposPermitidos = ['comum', 'admin', 'super_admin'];
-        
-        if (!in_array($novoTipo, $tiposPermitidos)) {
-            throw new Exception("Tipo de usuário inválido.");
+     * Atualiza o tipo de usuário
+     * 
+     * @param int $idUsuario ID do usuário
+     * @param string $novoTipo Novo tipo de usuário ('comum', 'admin', 'super_admin')
+     * @return bool Resultado da operação
+     */
+    public function atualizarTipoUsuario(int $idUsuario, string $novoTipo): bool
+    {
+        try {
+            $tiposPermitidos = ['comum', 'admin', 'super_admin'];
+            
+            if (!in_array($novoTipo, $tiposPermitidos)) {
+                throw new Exception("Tipo de usuário inválido.");
+            }
+            
+            return $this->usuarioModel->atualizarTipo($idUsuario, $novoTipo);
+        } catch (Exception $e) {
+            error_log("[Erro] Falha ao atualizar tipo de usuário: " . $e->getMessage());
+            return false;
         }
-        
-        $usuario = new Usuario();
-        return $usuario->atualizarTipo($idUsuario, $novoTipo);
-    } catch (Exception $e) {
-        error_log("[Erro] Falha ao atualizar tipo de usuário: " . $e->getMessage());
-        return false;
     }
-}
 }
