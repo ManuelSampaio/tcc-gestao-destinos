@@ -1407,11 +1407,9 @@ header .hamburger {
                     </div>
                 <?php else: ?>
                     <!-- Usuário não logado - Mostra botões de login e cadastro -->
-                    <a href="login.php" class="btn-login">
-                        <i class="fas fa-sign-in-alt"></i> Entrar
-                    </a>
-                    <a href="cadastro.php" class="btn-register">
-                        <i class="fas fa-user-plus"></i> Cadastrar
+                    
+                    <a href="login.php" class="btn-register">
+                        <i class="fas fa-user-plus"></i> Entrar
                     </a>
                 <?php endif; ?>
             </div>

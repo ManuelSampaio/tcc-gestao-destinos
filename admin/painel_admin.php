@@ -682,7 +682,7 @@ $usuarioLogado = $_SESSION['usuario'];
                     Usuários Ativos
                 </div>
                 <div class="card-content">
-                    <h2>32</h2>
+                    <h2>4</h2>
                     <i class="fas fa-arrow-up" style="color: var(--success);"></i>
                 </div>
             </div>
@@ -691,8 +691,8 @@ $usuarioLogado = $_SESSION['usuario'];
         <div class="angola-feature">
             <div class="feature-image"></div>
             <div class="feature-content">
-                <h2 class="feature-title">Descubra Angola</h2>
-                <p>Bem-vindo ao sistema administrativo do portal Destinos Angola. Aqui você pode gerenciar todos os conteúdos relacionados ao turismo e destinos de Angola.</p>
+                <h2 class="feature-title">Destinos Angola</h2>
+                <p>Bem-vindo ao Painel Administrativo do portal Destinos Angola. Aqui você pode gerenciar todos os conteúdos relacionados ao turismo e destinos de Angola.</p>
                 
                 <div class="angola-flag-colors">
                     <div class="flag-stripe flag-red"></div>
@@ -702,14 +702,6 @@ $usuarioLogado = $_SESSION['usuario'];
             </div>
         </div>
 
-        <div class="action-card">
-            <div class="action-icon">
-                <i class="fas fa-plus"></i>
-            </div>
-            <h3 class="action-title">Novo Destino</h3>
-            <p class="action-desc">Adicionar um novo destino turístico</p>
-        </div>
-           
         <div class="footer">
             <div class="copyright">
                 <span>© 2025 Destinos Angola</span>
@@ -717,9 +709,7 @@ $usuarioLogado = $_SESSION['usuario'];
                 <span>🇦🇴 Promovendo o turismo angolano</span>
             </div>
             <div class="footer-links">
-                <a href="#" class="footer-link">Suporte</a>
-                <a href="#" class="footer-link">Política de Privacidade</a>
-                <a href="#" class="footer-link">Termos de Uso</a>
+                
             </div>
         </div>
     </div>

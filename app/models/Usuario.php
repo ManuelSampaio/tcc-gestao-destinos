@@ -223,4 +223,25 @@ class Usuario
             default => false,
         };
     }
+
+    /**
+ * Atualiza o tipo de um usuário
+ * 
+ * @param int $idUsuario ID do usuário
+ * @param string $novoTipo Novo tipo de usuário
+ * @return bool Resultado da operação
+ */
+public function atualizarTipo(int $idUsuario, string $novoTipo): bool
+{
+    try {
+        $sql = "UPDATE usuarios SET tipo_usuario = :tipo_usuario WHERE id_usuario = :id_usuario";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmt->bindParam(':tipo_usuario', $novoTipo, PDO::PARAM_STR);
+        return $stmt->execute();
+    } catch (Exception $e) {
+        error_log("[Erro] Falha ao atualizar tipo de usuário: " . $e->getMessage());
+        return false;
+    }
+}
 }

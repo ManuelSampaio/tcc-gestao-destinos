@@ -311,7 +311,7 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
         <small><?= htmlspecialchars($usuarioLogado['email'] ?? 'Email') ?></small>
     </div>
     <a href="painel_admin.php" class="d-block text-decoration-none">
-        <i class="fas fa-users"></i> Painel Admin
+        <i class="fas fa-users"></i> Voltar ao Painel
     </a>
     <?php if (($usuarioLogado['tipo_usuario'] ?? '') === 'super_admin'): ?>
         <a href="solicitacoes_pendentes.php" class="d-block text-decoration-none">

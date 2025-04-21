@@ -221,4 +221,28 @@ class UsuarioController
             return ['success' => false, 'message' => "Erro ao listar solicitações."];
         }
     }
+
+    /**
+ * Atualiza o tipo de usuário
+ * 
+ * @param int $idUsuario ID do usuário
+ * @param string $novoTipo Novo tipo de usuário ('comum', 'admin', 'super_admin')
+ * @return bool Resultado da operação
+ */
+public function atualizarTipoUsuario(int $idUsuario, string $novoTipo): bool
+{
+    try {
+        $tiposPermitidos = ['comum', 'admin', 'super_admin'];
+        
+        if (!in_array($novoTipo, $tiposPermitidos)) {
+            throw new Exception("Tipo de usuário inválido.");
+        }
+        
+        $usuario = new Usuario();
+        return $usuario->atualizarTipo($idUsuario, $novoTipo);
+    } catch (Exception $e) {
+        error_log("[Erro] Falha ao atualizar tipo de usuário: " . $e->getMessage());
+        return false;
+    }
+}
 }
