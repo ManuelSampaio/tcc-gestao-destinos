@@ -131,37 +131,56 @@ class Usuario
     }
 
     public function atualizarUsuario(int $id, array $dados, string $tipoUsuarioLogado): bool
-    {
-        $usuarioAtual = $this->buscarPorId($id);
-        if (!$usuarioAtual) {
-            throw new Exception("Usuário não encontrado.");
-        }
+{
+    $usuarioAtual = $this->buscarPorId($id);
+    if (!$usuarioAtual) {
+        throw new Exception("Usuário não encontrado.");
+    }
 
-        // Verifica se o usuário tem permissão para editar
-        if (!$this->validarPermissaoEdicao($tipoUsuarioLogado, $usuarioAtual['tipo_usuario'])) {
-            throw new Exception("Sem permissão para editar este usuário.");
-        }
+    // Verifica se o usuário tem permissão para editar
+    if (!$this->validarPermissaoEdicao($tipoUsuarioLogado, $usuarioAtual['tipo_usuario'])) {
+        throw new Exception("Sem permissão para editar este usuário.");
+    }
 
-        try {
+    try {
+        // Verifica se a senha deve ser atualizada
+        if (isset($dados['senha']) && !empty($dados['senha'])) {
+            $senhaHash = password_hash($dados['senha'], PASSWORD_DEFAULT);
+            $sql = "UPDATE usuarios SET nome = :nome, email = :email, senha = :senha WHERE id_usuario = :id";
+            $params = [
+                ':nome' => trim(htmlspecialchars($dados['nome'])),
+                ':email' => trim($dados['email']),
+                ':senha' => $senhaHash,
+                ':id' => $id
+            ];
+        } else {
             $sql = "UPDATE usuarios SET nome = :nome, email = :email WHERE id_usuario = :id";
             $params = [
                 ':nome' => trim(htmlspecialchars($dados['nome'])),
                 ':email' => trim($dados['email']),
                 ':id' => $id
             ];
-
-            // Apenas super_admin pode alterar o tipo de usuário
-            if ($tipoUsuarioLogado === 'super_admin' && isset($dados['tipo_usuario'])) {
-                $sql = "UPDATE usuarios SET nome = :nome, email = :email, tipo_usuario = :tipo_usuario WHERE id_usuario = :id";
-                $params[':tipo_usuario'] = trim($dados['tipo_usuario']);
-            }
-
-            return (bool) $this->executarQuery($sql, $params);
-        } catch (PDOException $e) {
-            error_log("Erro ao atualizar usuário: " . $e->getMessage());
-            throw new Exception("Erro ao atualizar o usuário.");
         }
+
+        // Apenas super_admin pode alterar o tipo de usuário
+        if ($tipoUsuarioLogado === 'super_admin' && isset($dados['tipo_usuario'])) {
+            if (isset($dados['senha']) && !empty($dados['senha'])) {
+                $sql = "UPDATE usuarios SET nome = :nome, email = :email, senha = :senha, tipo_usuario = :tipo_usuario WHERE id_usuario = :id";
+            } else {
+                $sql = "UPDATE usuarios SET nome = :nome, email = :email, tipo_usuario = :tipo_usuario WHERE id_usuario = :id";
+            }
+            $params[':tipo_usuario'] = trim($dados['tipo_usuario']);
+        }
+
+        $result = $this->executarQuery($sql, $params);
+        
+        // Se não houve erros, considere a operação bem-sucedida mesmo se nenhum dado foi alterado
+        return true;
+    } catch (PDOException $e) {
+        error_log("Erro ao atualizar usuário: " . $e->getMessage());
+        throw new Exception("Erro ao atualizar o usuário.");
     }
+}
 
     public function removerPorId(int $id, string $tipoUsuarioLogado): bool
     {

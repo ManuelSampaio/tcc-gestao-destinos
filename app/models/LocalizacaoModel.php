@@ -126,6 +126,32 @@ class LocalizacaoModel {
     }
     
     /**
+     * Busca uma localização pelo nome e ID da província
+     *
+     * @param int $provinciaId ID da província
+     * @param string $nomeLocal Nome do local
+     * @return array|bool Dados da localização ou false em caso de erro
+     */
+    public function buscarPorProvinciaENome($provinciaId, $nomeLocal) {
+        try {
+            $query = "SELECT * FROM localizacoes 
+                     WHERE id_provincia = :provincia_id 
+                     AND nome_local = :nome_local 
+                     LIMIT 1";
+                     
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':provincia_id', $provinciaId, PDO::PARAM_INT);
+            $stmt->bindParam(':nome_local', $nomeLocal, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log('Erro ao buscar localização por província e nome: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    /**
      * Lista todas as localizações
      *
      * @return array|bool Lista de localizações ou false em caso de erro

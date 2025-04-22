@@ -39,25 +39,42 @@ $provincias = $provinciaController->listarProvincias();
 
 // Verificar se o formulário foi submetido
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Obter apenas os campos que podem ser editados
     $nome = htmlspecialchars($_POST['nome'] ?? '');
     $descricao = htmlspecialchars($_POST['descricao'] ?? '');
-    $localizacaoTexto = htmlspecialchars($_POST['localizacao'] ?? '');
-    $categoriaId = htmlspecialchars($_POST['categoria'] ?? '');
     $provinciaId = htmlspecialchars($_POST['provincia'] ?? '');
-    $latitude = htmlspecialchars($_POST['latitude'] ?? '');
-    $longitude = htmlspecialchars($_POST['longitude'] ?? '');
-    $isMaravilha = isset($_POST['is_maravilha']) ? 1 : 0;
     $imagem = $_FILES['imagem'] ?? null;
+    
+    // Manter os valores originais dos campos não editáveis
+    $categoriaId = $destino['id_categoria'];
+    $idLocalizacao = isset($destino['id_localizacao']) ? $destino['id_localizacao'] : null;
+    $isMaravilha = $destino['is_maravilha'];
+    $latitude = $destino['latitude'];
+    $longitude = $destino['longitude'];
+    $localizacaoTexto = isset($destino['localizacao_texto']) ? $destino['localizacao_texto'] : 
+                   (isset($destino['nome_local']) ? $destino['nome_local'] : '');
 
-    // Validações simples
-    if (empty($nome) || empty($descricao) || empty($localizacaoTexto) || empty($categoriaId) || empty($provinciaId)) {
+    // Validações simples - apenas para os campos editáveis
+    if (empty($nome) || empty($descricao) || empty($provinciaId)) {
         $message = "Por favor, preencha todos os campos obrigatórios.";
     } else {
         try {
-            // 1. Atualizar localização
-            $idLocalizacao = $destino['id_localizacao'];
-            $localizacaoController->atualizarLocalizacao($idLocalizacao, $localizacaoTexto, $latitude, $longitude, $provinciaId);
-            
+            // 1. Atualizar apenas a província na localização
+            if (!empty($idLocalizacao)) {
+                $localizacaoController->atualizarProvincia($idLocalizacao, $provinciaId);
+            } else {
+                // Se não tivermos um ID de localização, isso precisa ser tratado de outra forma
+                // Por exemplo, poderíamos criar uma nova localização
+                $novaLocalizacaoId = $localizacaoController->cadastrarLocalizacao($localizacaoTexto, $latitude, $longitude, $provinciaId);
+                if ($novaLocalizacaoId) {
+                    // Atualize o destino para usar a nova localização
+                    // Isto provavelmente requer um método adicional no DestinoController
+                    // $destinoController->atualizarLocalizacaoDoDestino($id, $novaLocalizacaoId);
+                    error_log("Nova localização criada com ID: $novaLocalizacaoId");
+                } else {
+                    error_log("Falha ao criar nova localização para o destino ID: $id");
+                }
+            }            
             // 2. Caminho da imagem atual
             $imagemPath = $destino['imagem'];
             
@@ -75,12 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $fileName = uniqid() . '_' . basename($imagem['name']);
                     $filePath = $uploadDir . $fileName;
-                    $imagemPath = 'uploads/' . $fileName; // Caminho para armazenar no banco de dados
+                    $imagemPath = $fileName; // Simplificando o caminho para armazenar
                     
                     if (move_uploaded_file($imagem['tmp_name'], $filePath)) {
                         // Se tiver uma imagem anterior, excluí-la
                         if (!empty($destino['imagem'])) {
-                            $oldImagePath = '../' . $destino['imagem'];
+                            $oldImagePath = $uploadDir . $destino['imagem'];
                             if (file_exists($oldImagePath)) {
                                 unlink($oldImagePath);
                             }
@@ -93,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            // 4. Atualizar destino
-            $result = $destinoController->atualizarDestino($id, $nome, $descricao, $idLocalizacao, $imagemPath, $categoriaId, $isMaravilha);
+            // 4. Atualizar apenas os campos editáveis do destino
+            $result = $destinoController->atualizarDestinoSimplificado($id, $nome, $descricao, $imagemPath);
             
             if ($result) {
                 $message = "Destino atualizado com sucesso!";
@@ -130,6 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             --hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
             --transition: all 0.3s ease;
             --border-radius: 8px;
+            --disabled-bg: #f0f0f0;
+            --disabled-text: #999999;
         }
         
         * {
@@ -355,6 +374,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #ffffff;
         }
         
+        input:disabled, textarea:disabled, select:disabled {
+            background-color: var(--disabled-bg);
+            color: var(--disabled-text);
+            cursor: not-allowed;
+            border-color: #e0e0e0;
+        }
+        
         .current-image {
             margin-bottom: 15px;
             display: flex;
@@ -442,12 +468,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
         }
         
+        .checkbox-container input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
         .checkbox-label {
             cursor: pointer;
             font-weight: 500;
             color: var(--primary-color);
             font-size: 0.9rem;
             margin-bottom: 0;
+        }
+        
+        .checkbox-label.disabled {
+            color: var(--disabled-text);
+            cursor: not-allowed;
         }
         
         textarea {
@@ -501,6 +537,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .coords-container .form-group {
             flex: 1;
+        }
+        
+        .field-disabled {
+            opacity: 0.7;
         }
         
         @media (max-width: 768px) {
@@ -572,48 +612,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-column">
                         <div class="form-group">
                             <label for="nome"><i class="fas fa-signature"></i> Nome do Destino</label>
-                            <input type="text" id="nome" name="nome" value="<?php echo $destino['nome'] ?? ''; ?>" required>
+                            <input type="text" id="nome" name="nome" value="<?php echo $destino['nome_destino'] ?? $destino['nome'] ?? ''; ?>" required>
+                        </div>
+
+                        <div class="form-group field-disabled">
+                            <label for="categoria"><i class="fas fa-tags"></i> Categoria</label>
+                            <select id="categoria" name="categoria" disabled>
+                                <option value="">Selecione uma categoria</option>
+                                <?php foreach ($categorias as $categoria): ?>
+                                    <option value="<?php echo $categoria['id_categoria'] ?? $categoria['id']; ?>" 
+                                        <?php echo (isset($destino['id_categoria']) && $destino['id_categoria'] == ($categoria['id_categoria'] ?? $categoria['id'])) ? 'selected' : ''; ?>>
+                                        <?php echo $categoria['nome_categoria'] ?? $categoria['nome']; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <!-- Campo oculto para manter o valor original -->
+                            <input type="hidden" name="categoria_original" value="<?php echo $destino['id_categoria']; ?>">
                         </div>
 
                         <div class="form-group">
-    <label for="categoria"><i class="fas fa-tags"></i> Categoria</label>
-    <select id="categoria" name="categoria" required>
-        <option value="">Selecione uma categoria</option>
-        <?php foreach ($categorias as $categoria): ?>
-            <option value="<?php echo $categoria['id_categoria'] ?? $categoria['id']; ?>" 
-                <?php echo (isset($destino['id_categoria']) && $destino['id_categoria'] == ($categoria['id_categoria'] ?? $categoria['id'])) ? 'selected' : ''; ?>>
-                <?php echo $categoria['nome_categoria'] ?? $categoria['nome']; ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-</div>
+                            <label for="provincia"><i class="fas fa-map-marker-alt"></i> Província</label>
+                            <select id="provincia" name="provincia" required>
+                                <option value="">Selecione uma província</option>
+                                <?php foreach ($provincias as $provincia): ?>
+                                    <option value="<?php echo $provincia['id_provincia'] ?? $provincia['id']; ?>" 
+                                        <?php echo (isset($destino['id_provincia']) && $destino['id_provincia'] == ($provincia['id_provincia'] ?? $provincia['id'])) ? 'selected' : ''; ?>>
+                                        <?php echo $provincia['nome_provincia'] ?? $provincia['nome']; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-                        <div class="form-group">
-    <label for="provincia"><i class="fas fa-map-marker-alt"></i> Província</label>
-    <select id="provincia" name="provincia" required>
-        <option value="">Selecione uma província</option>
-        <?php foreach ($provincias as $provincia): ?>
-            <option value="<?php echo $provincia['id_provincia'] ?? $provincia['id']; ?>" 
-                <?php echo (isset($destino['id_provincia']) && $destino['id_provincia'] == ($provincia['id_provincia'] ?? $provincia['id'])) ? 'selected' : ''; ?>>
-                <?php echo $provincia['nome_provincia'] ?? $provincia['nome']; ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-</div>
-
-                        <div class="form-group">
+                        <div class="form-group field-disabled">
                             <label for="localizacao"><i class="fas fa-location-arrow"></i> Endereço/Localização</label>
-                            <input type="text" id="localizacao" name="localizacao" value="<?php echo $destino['localizacao_texto'] ?? ''; ?>" required>
+                            <input type="text" id="localizacao" name="localizacao" value="<?php echo $destino['localizacao_texto'] ?? $destino['nome_local'] ?? ''; ?>" disabled>
+                            <input type="hidden" name="localizacao_original" value="<?php echo $destino['localizacao_texto'] ?? $destino['nome_local'] ?? ''; ?>">
                         </div>
 
-                        <div class="coords-container">
+                        <div class="coords-container field-disabled">
                             <div class="form-group">
                                 <label for="latitude"><i class="fas fa-map-pin"></i> Latitude</label>
-                                <input type="text" id="latitude" name="latitude" value="<?php echo $destino['latitude'] ?? ''; ?>" placeholder="Ex: -8.8383">
+                                <input type="text" id="latitude" name="latitude" value="<?php echo $destino['latitude'] ?? ''; ?>" disabled>
+                                <input type="hidden" name="latitude_original" value="<?php echo $destino['latitude'] ?? ''; ?>">
                             </div>
                             <div class="form-group">
                                 <label for="longitude"><i class="fas fa-map-pin"></i> Longitude</label>
-                                <input type="text" id="longitude" name="longitude" value="<?php echo $destino['longitude'] ?? ''; ?>" placeholder="Ex: 13.2344">
+                                <input type="text" id="longitude" name="longitude" value="<?php echo $destino['longitude'] ?? ''; ?>" disabled>
+                                <input type="hidden" name="longitude_original" value="<?php echo $destino['longitude'] ?? ''; ?>">
                             </div>
                         </div>
                     </div>
@@ -625,34 +670,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="form-group">
-    <label><i class="fas fa-image"></i> Imagem</label>
-    <?php if (isset($destino['imagem']) && !empty($destino['imagem'])): ?>
-        <div class="current-image">
-            <?php 
-            // Garantir que o caminho da imagem esteja formatado corretamente
-            $imagemPath = $destino['imagem'];
-            // Remover caracteres especiais do caminho da imagem
-            $imagemPath = htmlspecialchars($imagemPath);
-            ?>
-           <img src="../uploads/<?php echo htmlspecialchars($destino['imagem']); ?>" alt="Imagem do destino" class="image-preview">
-            <small>Imagem atual. Envie uma nova imagem para substituí-la.</small>
-        </div>
-    <?php endif; ?>
-    <div class="file-upload">
-        <div class="upload-icon">
-            <i class="fas fa-cloud-upload-alt"></i>
-        </div>
-        <div class="upload-text">Clique ou arraste uma imagem aqui</div>
-        <div class="upload-subtext">Formatos aceitos: JPG, PNG ou GIF</div>
-        <input type="file" id="imagem" name="imagem" accept="image/jpeg, image/png, image/gif">
-    </div>
-</div>
+                            <label><i class="fas fa-image"></i> Imagem</label>
+                            <?php if (isset($destino['imagem']) && !empty($destino['imagem'])): ?>
+                                <div class="current-image">
+                                    <?php 
+                                    // Garantir que o caminho da imagem esteja formatado corretamente
+                                    $imagemPath = htmlspecialchars($destino['imagem']);
+                                    ?>
+                                    <img src="../uploads/<?php echo $imagemPath; ?>" alt="Imagem do destino" class="image-preview">
+                                    <small>Imagem atual. Envie uma nova imagem para substituí-la.</small>
+                                </div>
+                            <?php endif; ?>
+                            <div class="file-upload">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">Clique ou arraste uma imagem aqui</div>
+                                <div class="upload-subtext">Formatos aceitos: JPG, PNG ou GIF</div>
+                                <input type="file" id="imagem" name="imagem" accept="image/jpeg, image/png, image/gif">
+                            </div>
+                        </div>
 
-                        <div class="checkbox-container">
-                            <input type="checkbox" id="is_maravilha" name="is_maravilha" <?php echo ($destino['is_maravilha'] == 1) ? 'checked' : ''; ?>>
-                            <label for="is_maravilha" class="checkbox-label">
+                        <div class="checkbox-container field-disabled">
+                            <input type="checkbox" id="is_maravilha" name="is_maravilha" <?php echo ($destino['is_maravilha'] == 1) ? 'checked' : ''; ?> disabled>
+                            <label for="is_maravilha" class="checkbox-label disabled">
                                 <i class="fas fa-star"></i> Marcar como Maravilha de Angola
                             </label>
+                            <input type="hidden" name="is_maravilha_original" value="<?php echo $destino['is_maravilha']; ?>">
                         </div>
                     </div>
                 </div>
@@ -703,31 +747,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 preview.alt = file.name;
             };
             reader.readAsDataURL(file);
-        });
-        
-        // Validação de coordenadas
-        function validarCoordenadas() {
-            const latitude = document.getElementById('latitude').value;
-            const longitude = document.getElementById('longitude').value;
-            
-            if (latitude && isNaN(parseFloat(latitude))) {
-                alert('Por favor, insira um valor numérico válido para latitude.');
-                return false;
-            }
-            
-            if (longitude && isNaN(parseFloat(longitude))) {
-                alert('Por favor, insira um valor numérico válido para longitude.');
-                return false;
-            }
-            
-            return true;
-        }
-        
-        // Adicionar validação ao enviar formulário
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (!validarCoordenadas()) {
-                e.preventDefault();
-            }
         });
     </script>
 </body>

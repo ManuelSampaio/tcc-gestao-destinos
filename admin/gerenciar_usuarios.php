@@ -23,22 +23,14 @@ $usuarioLogado = $_SESSION['usuario'];
 $message = "";
 $alertType = "info";
 
-// Exclusão de usuário
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['excluir_usuario'])) {
-    $idUsuario = (int)$_POST['id_usuario'];
+// Verificar se há mensagens da sessão (vindo do arquivo excluir_usuario.php)
+if (isset($_SESSION['message']) && !empty($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $alertType = $_SESSION['alertType'] ?? 'info';
     
-    try {
-        if ($usuarioController->removerUsuario($idUsuario)) {
-            $message = "Usuário excluído com sucesso!";
-            $alertType = "success";
-        } else {
-            $message = "Erro ao excluir usuário.";
-            $alertType = "danger";
-        }
-    } catch (Exception $e) {
-        $message = $e->getMessage();
-        $alertType = "danger";
-    }
+    // Limpar mensagens da sessão para não exibir novamente
+    unset($_SESSION['message']);
+    unset($_SESSION['alertType']);
 }
 
 // Cadastro de novo usuário
@@ -382,10 +374,10 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
                                     <?php 
                                     // Verificar se o tipo_usuario existe
                                     $tipoExibicao = 'Usuário';
-                                    $tipoUsuario = $usuario['tipo_usuario'] ?? 'comum';
+                                    $tipoUsuarioAtual = $usuario['tipo_usuario'] ?? 'comum';
                                     
                                     // Mapear valores do banco para exibição
-                                    switch($tipoUsuario) {
+                                    switch($tipoUsuarioAtual) {
                                         case 'admin':
                                             $tipoExibicao = 'Administrador';
                                             $badgeClass = 'bg-primary';
@@ -407,12 +399,26 @@ $totalUsuariosComuns = $estatisticas['comuns'] ?? 0;
                                     <a href="editar_usuario.php?id=<?= $usuario['id_usuario'] ?? '' ?>" class="btn btn-sm btn-info" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php if ($tipoUsuario === 'super_admin' || 
-                                        ($tipoUsuario === 'admin' && ($usuario['tipo_usuario'] ?? '') === 'comum')): ?>
-                                        <form method="post" style="display: inline;" 
+                                    
+                                    <?php 
+                                    // Verifica se o botão de exclusão deve ser exibido
+                                    $podeExcluir = false;
+
+                                    // Super admin pode excluir admins e usuários comuns, mas não outros super_admins
+                                    if ($tipoUsuario === 'super_admin' && $tipoUsuarioAtual !== 'super_admin') {
+                                        $podeExcluir = true;
+                                    }
+                                    // Admin só pode excluir usuários comuns
+                                    else if ($tipoUsuario === 'admin' && $tipoUsuarioAtual === 'comum') {
+                                        $podeExcluir = true;
+                                    }
+
+                                    if ($podeExcluir): 
+                                    ?>
+                                        <form action="excluir_usuario.php" method="post" style="display: inline;" 
                                               onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
                                             <input type="hidden" name="id_usuario" value="<?= $usuario['id_usuario'] ?? '' ?>">
-                                            <button type="submit" name="excluir_usuario" class="btn btn-sm btn-danger" title="Excluir">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>

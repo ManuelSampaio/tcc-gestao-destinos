@@ -5,7 +5,6 @@ namespace App\Controllers;
 // Use caminho absoluto para encontrar corretamente o arquivo
 require_once __DIR__ . '/../models/LocalizacaoModel.php';
 use App\Models\LocalizacaoModel;
-use Config\Database; // Adicionado o import correto para Database
 use PDO;
 use Exception;
 
@@ -48,6 +47,47 @@ class LocalizacaoController {
     }
     
     /**
+     * Método alternativo para criar localização que aceita array de dados
+     * 
+     * @param array|string $dados Array de dados ou nome do local
+     * @param string|null $latitude Latitude (opcional, ignorado se $dados for array)
+     * @param string|null $longitude Longitude (opcional, ignorado se $dados for array)
+     * @param int|null $provinciaId ID da província (ignorado se $dados for array)
+     * @return int|bool ID da localização inserida ou false em caso de erro
+     */
+    public function criarLocalizacao($dados, $latitude = null, $longitude = null, $provinciaId = null) {
+        try {
+            // Se $dados for um array, extrair os valores dele
+            if (is_array($dados)) {
+                $nomeLocal = isset($dados['nome_local']) ? $dados['nome_local'] : '';
+                $latitude = isset($dados['latitude']) ? $dados['latitude'] : null;
+                $longitude = isset($dados['longitude']) ? $dados['longitude'] : null;
+                $provinciaId = isset($dados['id_provincia']) ? $dados['id_provincia'] : null;
+                
+                // Validação básica
+                if (empty($nomeLocal) || empty($provinciaId)) {
+                    throw new Exception("Nome do local e província são obrigatórios");
+                }
+                
+                return $this->cadastrarLocalizacao($nomeLocal, $latitude, $longitude, $provinciaId);
+            } else {
+                // $dados é o nome_local
+                $nomeLocal = $dados;
+                
+                // Validação básica
+                if (empty($nomeLocal) || empty($provinciaId)) {
+                    throw new Exception("Nome do local e província são obrigatórios");
+                }
+                
+                return $this->cadastrarLocalizacao($nomeLocal, $latitude, $longitude, $provinciaId);
+            }
+        } catch (Exception $e) {
+            error_log('Erro ao criar localização: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Atualiza uma localização existente
      * 
      * @param int $idLocalizacao ID da localização a ser atualizada
@@ -80,6 +120,35 @@ class LocalizacaoController {
     }
     
     /**
+     * Atualiza apenas a província de uma localização
+     *
+     * @param int $idLocalizacao ID da localização
+     * @param int $provinciaId ID da nova província
+     * @return bool Sucesso ou falha da operação
+     */
+    public function atualizarProvincia($idLocalizacao, $provinciaId) {
+        try {
+            if (empty($idLocalizacao)) {
+                throw new Exception("ID da localização é obrigatório");
+            }
+            
+            if (empty($provinciaId)) {
+                throw new Exception("ID da província é obrigatório");
+            }
+            
+            // Converte para inteiros para garantir tipagem correta
+            $idLocalizacao = (int)$idLocalizacao;
+            $provinciaId = (int)$provinciaId;
+            
+            // Usamos o método atualizar do modelo com apenas o campo de província
+            return $this->model->atualizar($idLocalizacao, null, $provinciaId);
+        } catch (Exception $e) {
+            error_log("Erro ao atualizar província da localização: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Obtém uma localização pelo ID
      *
      * @param int $id ID da localização
@@ -90,6 +159,31 @@ class LocalizacaoController {
             return $this->model->buscarPorId($id);
         } catch (Exception $e) {
             error_log('Erro ao buscar localização: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Obtém uma localização pelo nome e ID da província
+     *
+     * @param int $provinciaId ID da província
+     * @param string $nomeLocal Nome do local
+     * @return array|bool Dados da localização ou false em caso de erro
+     */
+    public function obterLocalizacaoPorProvinciaENome($provinciaId, $nomeLocal) {
+        try {
+            if (empty($provinciaId) || empty($nomeLocal)) {
+                throw new Exception("ID da província e nome do local são obrigatórios");
+            }
+            
+            // Limpa e formata os dados
+            $nomeLocal = trim($nomeLocal);
+            $provinciaId = (int)$provinciaId;
+            
+            // É necessário implementar este método no modelo (LocalizacaoModel)
+            return $this->model->buscarPorProvinciaENome($provinciaId, $nomeLocal);
+        } catch (Exception $e) {
+            error_log('Erro ao buscar localização por província e nome: ' . $e->getMessage());
             return false;
         }
     }

@@ -529,6 +529,30 @@ class DestinoController {
         }
     }
 
+    public function atualizarDestinoSimplificado($id, $nome, $descricao, $imagem) {
+        try {
+            $sql = "UPDATE destinos_turisticos SET nome_destino = :nome, descricao = :descricao";
+            $params = [
+                ':nome' => $nome, 
+                ':descricao' => $descricao,
+                ':id' => $id
+            ];
+            
+            // Adicionar imagem apenas se houver uma nova
+            if (!empty($imagem)) {
+                $sql .= ", imagem = :imagem";
+                $params[':imagem'] = $imagem;
+            }
+            
+            $sql .= " WHERE id = :id";
+            
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute($params);
+        } catch (Exception $e) {
+            error_log("Erro ao atualizar destino: " . $e->getMessage());
+            return false;
+        }
+    }
     private function handleError($message, Exception $e) {
         $fullMessage = $message . " Detalhes: " . $e->getMessage();
         echo $fullMessage;
